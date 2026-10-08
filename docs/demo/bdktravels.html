@@ -128,6 +128,21 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 .route-pick .stop + .stop { border-top: 1px dashed var(--line); }
 .route-pick .stop span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
 .route-pick .stop b { font-size: 15px; }
+.route-pick .stop { position: relative; cursor: pointer; }
+.route-pick select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; color: var(--ink); font: 700 15px/1.3 var(--body); padding: 0 22px 0 0; width: 100%; cursor: pointer; text-overflow: ellipsis; }
+.route-pick select:focus { outline: none; }
+.route-pick .stop:focus-within { box-shadow: inset 0 0 0 3px var(--momo); border-radius: 14px; }
+.route-pick .stop::after { content: ""; position: absolute; right: 14px; bottom: 17px; width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); pointer-events: none; }
+.swap { transition: transform .3s ease; }
+.swap.spin { transform: rotate(180deg); }
+.times { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 6px; }
+.time-pick { border: 1.5px solid rgb(255 255 255 / .25); background: transparent; color: #fff; border-radius: 12px; padding: 7px 2px; display: grid; justify-items: center; line-height: 1.15; font-size: 13px; font-weight: 600; }
+.time-pick small { font-size: 10px; font-weight: 500; opacity: .75; }
+.time-pick[aria-pressed="true"] { background: var(--momo); color: var(--momo-ink); border-color: var(--momo); }
+.hero-card .mini { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; opacity: .75; font-weight: 600; margin-bottom: -6px; }
+.recent-item { cursor: pointer; width: 100%; text-align: left; color: var(--ink); font: inherit; }
+.recent-item:hover { border-color: var(--forest); }
+.empty { border: 1.5px dashed var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 10px; text-align: center; color: var(--muted); }
 .swap { grid-row: 1 / span 2; grid-column: 2; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--paper); display: grid; place-items: center; }
 .days { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 6px; }
 .day { border: 1.5px solid rgb(255 255 255 / .25); background: transparent; color: #fff; border-radius: 12px; padding: 7px 0; display: grid; justify-items: center; line-height: 1.15; }
@@ -150,7 +165,8 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 .dep-time { font-family: var(--display); font-size: 36px; font-weight: 800; line-height: 1; }
 .dep-time small { font-family: var(--body); font-size: 13px; font-weight: 500; color: var(--muted); margin-left: 6px; }
 .dep-price { text-align: right; }
-.dep-price b { font-size: 18px; display: block; }
+.dep-price b { font-size: 18px; display: block; white-space: nowrap; }
+.dep-price s { white-space: nowrap; }
 .dep-price s { font-size: 12px; color: var(--muted); }
 .dep-line { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
 .dep-line .track { height: 2px; background: repeating-linear-gradient(90deg, var(--line) 0 6px, transparent 6px 10px); position: relative; }
@@ -188,6 +204,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 /* Pay */
 .summary { border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 8px; font-size: 14px; }
 .summary div { display: flex; justify-content: space-between; gap: 10px; }
+.summary .num { white-space: nowrap; }
 .summary .total { border-top: 1px dashed var(--line); padding-top: 10px; font-weight: 700; font-size: 17px; }
 .networks { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
 .net { border: 1.5px solid var(--line); background: var(--card); border-radius: 14px; padding: 12px 6px; display: grid; justify-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
@@ -280,12 +297,12 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
   .board-row { grid-template-columns: 58px minmax(0, 1fr) 104px; }
   .board-row > :nth-child(3), .board-row > :nth-child(4) { display: none; }
 }
-.figures { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 10px; }
-@media (max-width: 720px) { .figures { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px 10px; }
 .fig { border-top: 2px solid var(--line); padding-top: 8px; display: grid; gap: 2px; }
 .fig span { font-size: 12px; color: var(--muted); }
-.fig b { font-size: 21px; font-variant-numeric: tabular-nums; }
+.fig b { font-size: clamp(18px, 1.6vw, 21px); font-variant-numeric: tabular-nums; white-space: nowrap; letter-spacing: -.01em; }
 .fig small { font-size: 11.5px; color: var(--ok); font-weight: 600; }
+.fig b .cur { font-size: .6em; color: var(--muted); margin-right: 4px; font-weight: 700; }
 .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
 @media (max-width: 900px) { .two { grid-template-columns: minmax(0,1fr); } }
 .panel { border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
@@ -297,13 +314,16 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 .remap tr.flash { background: var(--ok-soft); }
 .arrow { color: var(--muted); }
 .table-scroll { overflow-x: auto; }
-.recon { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
-.recon div { background: var(--paper); border-radius: 12px; padding: 10px; display: grid; }
-.recon span { font-size: 11.5px; color: var(--muted); }
-.recon b { font-size: 16px; font-variant-numeric: tabular-nums; }
+/* One line per figure: name on the left, amount on the right. Never squeezed. */
+.recon { display: grid; background: var(--paper); border-radius: 12px; padding: 4px 14px; }
+.recon div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; }
+.recon div + div { border-top: 1px dashed var(--line); }
+.recon span { font-size: 14px; color: var(--muted); }
+.recon b { font-size: 17px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ledger-ok { display: flex; gap: 10px; align-items: center; color: var(--ok); font-weight: 600; font-size: 14px; }
 
 .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 22px); transform: translate(-50%, 140%); background: var(--ink); color: var(--paper); padding: 12px 18px; border-radius: 14px; font-weight: 600; font-size: 14px; box-shadow: var(--shadow); transition: transform .3s cubic-bezier(.2,.9,.3,1.2); max-width: calc(100vw - 32px); z-index: 10; }
+.toast:not(.show) { visibility: hidden; transition: transform .3s, visibility 0s .3s; }
 .toast.show { transform: translate(-50%, 0); }
 .foot { font-size: 12.5px; color: var(--muted); text-align: center; }
 .fade-in { animation: fade .28s ease both; }
@@ -348,7 +368,10 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 <script>
 (() => {
   const $ = (sel, root = document) => root.querySelector(sel);
-  const ced = (p) => "GH₵ " + Math.floor(p / 100).toLocaleString("en-GH") + "." + String(p % 100).padStart(2, "0");
+  // Money is whole pesewas. "GH₵" and the amount never split onto two lines.
+  const ced = (p) => "GH₵\u00a0" + String(Math.floor(p / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "." + String(p % 100).padStart(2, "0");
+  // For big figures: a smaller "GH₵" in front so the amount always fits its box.
+  const cedBig = (p) => `<small class="cur">GH₵</small>${ced(p).slice(4)}`;
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const toastEl = $("#toast");
   let toastTimer;
@@ -368,14 +391,58 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
   };
 
   // ---------------------------------------------------------------- data
-  const FARE = 8000, PREMIUM = 10000, FEE = 150, STUDENT = 0.10;
-  const departures = [
-    { time: "05:30", arrive: "08:15", bus: "Coach · 2+2", left: 6, tag: ["warn", "6 seats left"] },
-    { time: "07:00", arrive: "09:45", bus: "Coach · 2+2 · Wi-Fi", left: 23, tag: ["ok", "Most popular"] },
-    { time: "10:30", arrive: "13:15", bus: "Coach · 2+2", left: 41, tag: null },
-    { time: "14:00", arrive: "16:45", bus: "Executive · 2+1", left: 0, tag: ["bad", "Sold out"] },
-    { time: "17:30", arrive: "20:15", bus: "Coach · 2+2", left: 33, tag: null },
+  const FEE = 150, STUDENT = 0.10, FRONT_EXTRA = 2000;
+  // Where BDKtravels buses stop. "short" is what fits on the sign on the bus.
+  const places = [
+    { id: "circle", town: "Accra", stop: "Circle Station", short: "Circle", at: [5.57, -0.21] },
+    { id: "kaneshie", town: "Accra", stop: "Kaneshie Station", short: "Kaneshie", at: [5.56, -0.24] },
+    { id: "legon", town: "Accra", stop: "Legon (UG) Gate", short: "Legon", at: [5.65, -0.19] },
+    { id: "kasoa", town: "Kasoa", stop: "Kasoa Junction", short: "Kasoa", at: [5.53, -0.42] },
+    { id: "winneba", town: "Winneba", stop: "UEW Gate", short: "UEW", at: [5.36, -0.63] },
+    { id: "ucc", town: "Cape Coast", stop: "UCC Gate", short: "UCC", at: [5.11, -1.29] },
+    { id: "takoradi", town: "Takoradi", stop: "Market Circle", short: "Takoradi", at: [4.90, -1.76] },
+    { id: "koforidua", town: "Koforidua", stop: "Koforidua Station", short: "Koforidua", at: [6.09, -0.26] },
+    { id: "kumasi", town: "Kumasi", stop: "KNUST Gate", short: "KNUST", at: [6.67, -1.57] },
+    { id: "kejetia", town: "Kumasi", stop: "Kejetia Station", short: "Kejetia", at: [6.69, -1.62] },
+    { id: "sunyani", town: "Sunyani", stop: "UENR Gate", short: "Sunyani", at: [7.34, -2.33] },
+    { id: "ho", town: "Ho", stop: "UHAS Gate", short: "Ho", at: [6.60, 0.47] },
+    { id: "tamale", town: "Tamale", stop: "UDS Gate", short: "Tamale", at: [9.40, -0.85] },
   ];
+  const place = (id) => places.find((x) => x.id === id);
+  const km = (a, b) => {
+    const r = Math.PI / 180, [la1, lo1] = a.at, [la2, lo2] = b.at;
+    const h = Math.sin((la2 - la1) * r / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin((lo2 - lo1) * r / 2) ** 2;
+    return 6371 * 2 * Math.asin(Math.sqrt(h)) * 1.18; // roads are longer than a straight line
+  };
+  const hm = (mins) => `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, "0")}m`;
+  const addMins = (time, mins) => {
+    const [h, m] = time.split(":").map(Number), t = h * 60 + m + mins;
+    return `${String(Math.floor(t / 60) % 24).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}${t >= 1440 ? " +1" : ""}`;
+  };
+  const seed = (text) => [...text].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+  // Everything about the chosen trip. In the real system the server works this out.
+  function route() {
+    const a = place(state.p.from), b = place(state.p.to);
+    const dist = km(a, b);
+    const mins = Math.max(35, Math.round(dist / 62 * 60 / 5) * 5);
+    const fare = Math.max(2000, Math.round(dist * 0.48 / 5) * 500); // pesewas, rounded to GH₵ 5
+    const via = places.filter((x) => x.town !== a.town && x.town !== b.town && km(a, x) > 35 && km(x, b) > 35 && km(a, x) + km(x, b) < dist * 1.07)
+      .filter((x, i, all) => all.findIndex((y) => y.town === x.town) === i)
+      .sort((x, y) => km(a, x) - km(a, y)).slice(0, 2).map((x) => x.town);
+    const long = mins > 300;
+    const times = long ? ["05:00", "07:30", "11:00", "19:00", "21:30"] : ["05:30", "07:00", "10:30", "14:00", "17:30"];
+    const deps = times.map((time, i) => {
+      const n = seed(a.id + b.id + time + state.p.day);
+      const exec = long ? i % 2 === 1 : i === 3;
+      const cap = exec ? 36 : 52;
+      const left = i === 3 && n % 3 !== 0 ? 0 : 3 + (n % (cap - 8));
+      const tag = left === 0 ? ["bad", "Sold out"] : left <= 8 ? ["warn", `${left} seats left`] : i === 1 ? ["ok", "Most popular"] : null;
+      return { time, arrive: addMins(time, mins), bus: exec ? "Executive · 2+1" : i === 1 ? "Coach · 2+2 · Wi-Fi" : "Coach · 2+2", left, tag,
+        part: Number(time.slice(0, 2)) < 12 ? "morning" : Number(time.slice(0, 2)) < 17 ? "afternoon" : "evening" };
+    });
+    return { a, b, mins, fare, front: fare + FRONT_EXTRA, via, deps, name: `${a.town} → ${b.town}` };
+  }
+  const timesOfDay = [["any", "Any time", "All buses"], ["morning", "Morning", "before 12"], ["afternoon", "Afternoon", "12 – 5pm"], ["evening", "Evening", "after 5pm"]];
   // Deterministic "taken" seats so the map looks lived-in.
   const taken = new Set(["1A","1B","2C","2D","3A","4B","4C","5D","6A","6B","7C","8A","8D","9B","10C","10D","11A","12B","12C","13A","13D","3D","5A","9C","11D"]);
   const held = new Set(["7A", "7B"]);
@@ -392,7 +459,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 
   const state = {
     mode: "passenger",
-    p: { step: "search", day: 1, student: true, dep: 1, seats: [], name: "Ama Mensah", phone: "024 123 4567", studentNo: "UCC/PS/22/0418", net: "MTN", holdEnds: 0, token: "" },
+    p: { step: "search", from: "circle", to: "ucc", when: "any", day: 1, student: true, dep: 1, seats: [], name: "Ama Mensah", phone: "024 123 4567", studentNo: "UCC/PS/22/0418", net: "MTN", holdEnds: 0, token: "" },
     c: { step: "home", boarded: 31, idx: 0, result: null },
     o: { tab: "today", resolved: new Set(), remapped: false, signed: false },
   };
@@ -428,18 +495,28 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 
   function price() {
     const p = state.p;
-    const base = p.seats.reduce((s, n) => s + (n.startsWith("1") && n.length === 2 ? PREMIUM : FARE), 0);
-    const disc = p.student && p.seats.length ? Math.round((p.seats[0].startsWith("1") && p.seats[0].length === 2 ? PREMIUM : FARE) * STUDENT) : 0;
+    const r = route();
+    const seatFare = (n) => (n.startsWith("1") && n.length === 2 ? r.front : r.fare);
+    const base = p.seats.reduce((s, n) => s + seatFare(n), 0);
+    const disc = p.student && p.seats.length ? Math.round(seatFare(p.seats[0]) * STUDENT) : 0;
     const fees = p.seats.length ? FEE : 0;
     return { base, disc, fees, total: base - disc + fees };
   }
 
+  const dayName = (i) => (days[i].label === "Tmrw" ? "Tomorrow" : days[i].label === "Today" ? "Today" : days[i].full.toLocaleDateString("en-GB", { weekday: "long" }));
+  function placeOptions(selected) {
+    const towns = [...new Set(places.map((x) => x.town))];
+    return towns.map((t) => `<optgroup label="${t}">${places.filter((x) => x.town === t).map((x) => `<option value="${x.id}" ${x.id === selected ? "selected" : ""}>${x.town} · ${x.stop}</option>`).join("")}</optgroup>`).join("");
+  }
+
   function passenger() {
     const p = state.p;
-    const dep = departures[p.dep];
-    setBlind(`Accra Circle → Cape Coast UCC · ${dep.time}`);
+    const r = route();
+    const dep = r.deps[p.dep] || r.deps[0];
+    const sign = (x) => (x.short === x.town ? x.town : `${x.town} ${x.short}`);
+    setBlind(`${sign(r.a)} → ${sign(r.b)}${p.step === "search" || p.step === "results" ? "" : ` · ${dep.time}`}`);
     const behind = {
-      search: "Students see only real BDKtravels buses and real prices. A full bus shows as sold out.",
+      search: "Pick where you are, where you are going, the day and the time. Only real BDKtravels buses and real prices show. A full bus shows as sold out.",
       results: "BDKtravels sets the price, not the phone. Students get 10% off with their student number.",
       seats: "The seat is kept for you for 10 minutes. Two people can never get the same seat, even if they tap at the same time.",
       details: "Every traveller gets their own ticket by text message.",
@@ -456,32 +533,38 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
           <div class="greet">Akwaaba, Ama</div>
           <h3>Where are you going?</h3>
           <div class="route-pick">
-            <div class="stop"><span>From</span><b>Accra · Circle Station</b></div>
-            <div class="stop"><span>To</span><b>Cape Coast · UCC Gate</b></div>
+            <label class="stop"><span>From</span><select id="from" aria-label="From">${placeOptions(p.from)}</select></label>
+            <label class="stop"><span>To</span><select id="to" aria-label="To">${placeOptions(p.to)}</select></label>
             <button class="swap" type="button" id="swap" aria-label="Swap from and to">${icons.swap}</button>
           </div>
+          <div class="mini">Day</div>
           <div class="days" role="group" aria-label="Day of travel">
             ${days.map((d, i) => `<button type="button" class="day" data-day="${i}" aria-pressed="${i === p.day}"><small>${d.label}</small><b>${d.date}</b></button>`).join("")}
+          </div>
+          <div class="mini">Time</div>
+          <div class="times" role="group" aria-label="Time of day">
+            ${timesOfDay.map(([k, t, sub]) => `<button type="button" class="time-pick" data-when="${k}" aria-pressed="${p.when === k}">${t}<small>${sub}</small></button>`).join("")}
           </div>
           <div class="toggle-row"><span>I'm a student <span style="opacity:.75">(10% off with your student number)</span></span><button type="button" class="switch" id="student" role="switch" aria-checked="${p.student}" aria-label="Student fare"></button></div>
           <button class="btn momo" type="button" id="find">Find buses</button>
         </div>
         <div class="label">Recent trips</div>
         <div class="recent">
-          <div class="recent-item"><span>Cape Coast → Accra</span><span class="chip ok">Travelled · Sun</span></div>
-          <div class="recent-item"><span>Accra → Kumasi Kejetia</span><span class="chip">Seat 8C · 12 Sep</span></div>
+          <button type="button" class="recent-item" data-trip="ucc:circle"><span>Cape Coast → Accra</span><span class="chip ok">Travelled · Sun</span></button>
+          <button type="button" class="recent-item" data-trip="circle:kejetia"><span>Accra → Kumasi Kejetia</span><span class="chip">Seat 8C · 12 Sep</span></button>
         </div>`;
     } else if (p.step === "results") {
+      const shown = r.deps.map((d, i) => ({ d, i })).filter(({ d }) => p.when === "any" || d.part === p.when);
       html = `
-        <div class="screen-head"><button class="back" type="button" data-go="search" aria-label="Back">${icons.back}</button><div><div class="screen-title">Accra → Cape Coast</div><div class="screen-sub">${days[p.day].label === "Tmrw" ? "Tomorrow" : days[p.day].label}, ${days[p.day].full.toLocaleDateString("en-GH", { day: "numeric", month: "short" })} · 5 departures</div></div></div>
-        ${departures.map((d, i) => {
-          const from = p.student ? FARE - FARE * STUDENT : FARE;
+        <div class="screen-head"><button class="back" type="button" data-go="search" aria-label="Back">${icons.back}</button><div><div class="screen-title">${r.name}</div><div class="screen-sub">${dayName(p.day)}, ${days[p.day].full.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · ${shown.length} bus${shown.length === 1 ? "" : "es"}${p.when === "any" ? "" : ` in the ${p.when}`}</div></div></div>
+        ${shown.length ? shown.map(({ d, i }) => {
+          const pay = p.student ? r.fare - Math.round(r.fare * STUDENT) : r.fare;
           return `<button class="dep fade-in" type="button" data-dep="${i}" ${d.left === 0 ? "disabled style=\"opacity:.55;cursor:not-allowed\"" : ""}>
-            <div class="dep-top"><div class="dep-time">${d.time}<small>→ ${d.arrive}</small></div><div class="dep-price"><b>${ced(from)}</b>${p.student ? `<s>${ced(FARE)}</s>` : ""}</div></div>
-            <div class="dep-line"><span>Circle</span><span class="track"></span><span>UCC Gate</span></div>
-            <div class="chips"><span class="chip">2h 45m · via Kasoa, Winneba</span><span class="chip">${d.bus}</span>${d.tag ? `<span class="chip ${d.tag[0]}">${d.tag[1]}</span>` : `<span class="chip">${d.left} seats left</span>`}</div>
+            <div class="dep-top"><div class="dep-time">${d.time}<small>→ ${d.arrive}</small></div><div class="dep-price"><b>${ced(pay)}</b>${p.student ? `<s>${ced(r.fare)}</s>` : ""}</div></div>
+            <div class="dep-line"><span>${esc(r.a.stop)}</span><span class="track"></span><span>${esc(r.b.stop)}</span></div>
+            <div class="chips"><span class="chip">${hm(r.mins)}${r.via.length ? ` · via ${r.via.join(", ")}` : " · no stops"}</span><span class="chip">${d.bus}</span>${d.tag ? `<span class="chip ${d.tag[0]}">${d.tag[1]}</span>` : `<span class="chip">${d.left} seats left</span>`}</div>
           </button>`;
-        }).join("")}`;
+        }).join("") : `<div class="empty fade-in"><b style="color:var(--ink)">No bus in the ${p.when} on this day.</b><span>Try another time or another day.</span><button class="btn ghost" type="button" id="anyTime">Show all times</button></div>`}`;
     } else if (p.step === "seats") {
       const rows = [];
       for (let r = 1; r <= 13; r++) {
@@ -496,8 +579,8 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
       }
       const pr = price();
       html = `
-        <div class="screen-head"><button class="back" type="button" data-go="results" aria-label="Back">${icons.back}</button><div><div class="screen-title">Choose up to 6 seats</div><div class="screen-sub">${dep.time} · Coach GR-2468-24</div></div></div>
-        <div class="legend"><span><i></i>Free</span><span><i class="t"></i>Taken</span><span><i class="m"></i>Yours</span><span><i class="p"></i>Front row · ${ced(PREMIUM)}</span></div>
+        <div class="screen-head"><button class="back" type="button" data-go="results" aria-label="Back">${icons.back}</button><div><div class="screen-title">Choose up to 6 seats</div><div class="screen-sub">${r.name} · ${dep.time} · Coach GR-2468-24</div></div></div>
+        <div class="legend"><span><i></i>Free</span><span><i class="t"></i>Taken</span><span><i class="m"></i>Yours</span><span><i class="p"></i>Front row · ${ced(r.front)}</span></div>
         <div class="coach"><div class="coach-front"><span>Front · door</span><span class="wheel" aria-hidden="true"></span></div>${rows.join("")}</div>
         <div class="dock">
           <div class="dock-row"><span>${p.seats.length ? `Seat${p.seats.length > 1 ? "s" : ""} <b class="mono">${p.seats.join(", ")}</b>` : "Tap a free seat"}</span>${p.seats.length ? `<span class="timer" id="timer">10:00 left</span>` : ""}</div>
@@ -517,7 +600,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
       html = `
         <div class="screen-head"><button class="back" type="button" data-go="details" aria-label="Back">${icons.back}</button><div><div class="screen-title">Review and pay</div><div class="screen-sub">Seats saved for you · <span class="timer" id="timer">saved</span></div></div></div>
         <div class="summary">
-          <div><span>${p.seats.length} seat${p.seats.length > 1 ? "s" : ""} · ${dep.time} Accra → Cape Coast</span><span class="num">${ced(pr.base)}</span></div>
+          <div><span>${p.seats.length} seat${p.seats.length > 1 ? "s" : ""} · ${dep.time} ${r.name}</span><span class="num">${ced(pr.base)}</span></div>
           ${pr.disc ? `<div style="color:var(--ok)"><span>Student fare (10%)</span><span class="num">−${ced(pr.disc)}</span></div>` : ""}
           <div><span>Booking fee</span><span class="num">${ced(pr.fees)}</span></div>
           <div class="total"><span>Total</span><span class="num">${ced(pr.total)}</span></div>
@@ -541,13 +624,13 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
         </div>`;
     } else if (p.step === "ticket") {
       html = `
-        <div class="screen-head"><div><div class="screen-title" style="color:var(--ok)">Paid. You're going home.</div><div class="screen-sub">Booking <span class="mono">K7Q2M9XF</span> · ticket also sent by text</div></div></div>
+        <div class="screen-head"><div><div class="screen-title" style="color:var(--ok)">Paid. Safe journey to ${r.b.town}.</div><div class="screen-sub">Booking <span class="mono">K7Q2M9XF</span> · ticket also sent by text</div></div></div>
         <div class="ticket fade-in">
-          <div class="ticket-head"><div><div class="label" style="color:rgb(255 255 255 / .75)">${days[p.day].full.toLocaleDateString("en-GH", { weekday: "short", day: "numeric", month: "short" })} · ${dep.time}</div><b>Accra → Cape Coast</b></div><div class="ticket-seat"><small>Seat</small><span>${esc(p.seats[0])}</span></div></div>
+          <div class="ticket-head"><div><div class="label" style="color:rgb(255 255 255 / .75)">${days[p.day].full.toLocaleDateString("en-GH", { weekday: "short", day: "numeric", month: "short" })} · ${dep.time}</div><b>${r.name}</b></div><div class="ticket-seat"><small>Seat</small><span>${esc(p.seats[0])}</span></div></div>
           <div class="ticket-body">
             <div><div class="label">Passenger</div>${esc(p.name)}</div>
             <div><div class="label">Fare</div>${p.student ? "Student" : "Standard"}</div>
-            <div><div class="label">Boards at</div>Circle Station, Bay 4</div>
+            <div><div class="label">Boards at</div>${esc(r.a.stop)}, Bay 4</div>
             <div><div class="label">Ticket</div><span class="mono">TF4R6Y9CF9</span></div>
           </div>
           <div class="perf" aria-hidden="true"></div>
@@ -558,7 +641,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
             ${p.student ? `<div class="chip warn">Bring your student ID</div>` : ""}
           </div>
         </div>
-        <div class="sms fade-in"><small>Text message · BDKtravels</small>Booking K7Q2M9XF confirmed. Accra to Cape Coast, ${dep.time}. Seat ${esc(p.seats[0])}: bdktravels.com/t/x8Kq… code 5UTY6T</div>
+        <div class="sms fade-in"><small>Text message · BDKtravels</small>Booking K7Q2M9XF confirmed. ${r.a.town} to ${r.b.town}, ${dep.time}. Seat ${esc(p.seats[0])}: bdktravels.com/t/x8Kq… code 5UTY6T</div>
         <button class="btn ghost" type="button" id="again">Book another trip</button>`;
     }
     $("#device").innerHTML = `<div class="device-wrap">${phone(html)}</div>`;
@@ -584,7 +667,26 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
     document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
     document.querySelectorAll("[data-day]").forEach((b) => b.addEventListener("click", () => { p.day = Number(b.dataset.day); render(); }));
     $("#student")?.addEventListener("click", () => { p.student = !p.student; render(); });
-    $("#swap")?.addEventListener("click", () => toast("Going back home works the same way."));
+    const pick = (which, value) => {
+      const other = which === "from" ? "to" : "from";
+      if (place(value).town === place(p[other]).town) {
+        // Same town on both sides: move the other side so the trip still makes sense.
+        p[other] = p[which];
+        toast(`${place(value).town} is on both sides, so we swapped them.`);
+      }
+      p[which] = value; p.dep = 1; render();
+    };
+    $("#from")?.addEventListener("change", (e) => pick("from", e.target.value));
+    $("#to")?.addEventListener("change", (e) => pick("to", e.target.value));
+    $("#swap")?.addEventListener("click", (e) => {
+      e.currentTarget.classList.add("spin");
+      setTimeout(() => { [p.from, p.to] = [p.to, p.from]; render(); }, 220);
+    });
+    document.querySelectorAll("[data-when]").forEach((b) => b.addEventListener("click", () => { p.when = b.dataset.when; render(); }));
+    document.querySelectorAll("[data-trip]").forEach((b) => b.addEventListener("click", () => {
+      [p.from, p.to] = b.dataset.trip.split(":"); render(); toast(`${place(p.from).town} → ${place(p.to).town}. Now pick the day.`);
+    }));
+    $("#anyTime")?.addEventListener("click", () => { p.when = "any"; render(); });
     $("#find")?.addEventListener("click", () => go("results"));
     document.querySelectorAll("[data-dep]").forEach((b) => b.addEventListener("click", () => { p.dep = Number(b.dataset.dep); p.seats = []; go("seats"); }));
     document.querySelectorAll("[data-seat]").forEach((b) => b.addEventListener("click", () => {
@@ -695,7 +797,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
   // ---------------------------------------------------------------- operations
   const attention = [
     { id: "bus", sev: "critical", text: "No bus yet: Accra → Kumasi, today 14:00", meta: "38 people booked · leaves in 2 hours", action: "Use bus GR-5521-25" },
-    { id: "refund", sev: "high", text: "Money back of GH₵ 72.00 did not go through", meta: "Booking ZS8FX4G2", action: "Try again" },
+    { id: "refund", sev: "high", text: "Money back of GH₵\u00a072.00 did not go through", meta: "Booking ZS8FX4G2", action: "Try again" },
     { id: "late", sev: "high", text: "Late payment: passenger given seat 9C instead", meta: "Same price · same kind of seat", action: "OK" },
     { id: "paper", sev: "normal", text: "Paper list not typed in: Accra → Takoradi, yesterday", meta: "Conductor: Esi", action: "Remind Esi" },
   ];
@@ -750,9 +852,9 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
         <section class="figures" aria-label="Today in numbers">
           <div class="fig"><span>Tickets sold</span><b>237</b><small>18% more than last Friday</small></div>
           <div class="fig"><span>How full</span><b>72%</b></div>
-          <div class="fig"><span>Money in today</span><b>GH₵ 19,284.50</b></div>
+          <div class="fig"><span>Money in today</span><b>${cedBig(1928450)}</b></div>
           <div class="fig"><span>On the bus</span><b>98</b></div>
-          <div class="fig"><span>To pay back</span><b>GH₵ 72.00</b></div>
+          <div class="fig"><span>To pay back</span><b>${cedBig(7200)}</b></div>
         </section>`;
     } else if (o.tab === "bus") {
       body = `
@@ -784,7 +886,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
             <div class="recon">
               <div><span>Paid by phone</span><b>214</b></div>
               <div><span>Tickets sold</span><b>214</b></div>
-              <div><span>Sent to your bank</span><b>GH₵ 18,402.50</b></div>
+              <div><span>Sent to your bank</span><b>${ced(1840250)}</b></div>
             </div>
             <div class="ledger-ok">${icons.check} Everything matches. Nothing is missing.</div>
             <button class="btn" type="button" id="signoff" ${o.signed ? "disabled" : ""}>${o.signed ? "Checked by Abena" : "Mark yesterday as checked"}</button>
@@ -792,9 +894,9 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
           <div class="panel">
             <h4>This week</h4>
             <div class="recon">
-              <div><span>Money in</span><b>GH₵ 96,210.00</b></div>
-              <div><span>Trips done</span><b>GH₵ 81,445.50</b></div>
-              <div><span>Payment fees</span><b>GH₵ 1,872.10</b></div>
+              <div><span>Money in</span><b>${ced(9621000)}</b></div>
+              <div><span>Trips done</span><b>${ced(8144550)}</b></div>
+              <div><span>Payment fees</span><b>${ced(187210)}</b></div>
             </div>
             <svg viewBox="0 0 320 110" width="100%" role="img" aria-label="Tickets sold each day this week, up to 237 today">
               ${[118, 142, 131, 166, 189, 214, 237].map((v, i) => { const x = 18 + i * 44, h = Math.round(v / 250 * 80); return `<rect x="${x}" y="${92 - h}" width="26" height="${h}" rx="5" fill="${i === 6 ? "var(--momo)" : "var(--forest)"}" opacity="${i === 6 ? 1 : .8}"></rect><text x="${x + 13}" y="106" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="Schibsted Grotesk, sans-serif">${["Sat","Sun","Mon","Tue","Wed","Thu","Fri"][i]}</text>`; }).join("")}
