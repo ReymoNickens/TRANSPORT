@@ -4,6 +4,7 @@ import { isHighRisk, requireFreshConfirmation, requirePermission, type Actor } f
 import { withOrganisation, type Tx } from "@/lib/db";
 import { AppError } from "./errors";
 import { apiRoute, readJson, type ApiContext } from "./handler";
+import { clientAddress } from "./client-address";
 
 type Schema = z.ZodType;
 type Out<S> = S extends z.ZodType ? z.infer<S> : undefined;
@@ -67,9 +68,3 @@ export function opsRoute<BS extends Schema | undefined = undefined, QS extends S
   });
 }
 
-function clientAddress(request: Request): string | null {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const candidate = forwarded || request.headers.get("x-real-ip") || null;
-  // Only something that looks like an IP address goes into the inet column.
-  return candidate && /^[0-9a-fA-F:.]{3,45}$/.test(candidate) ? candidate : null;
-}

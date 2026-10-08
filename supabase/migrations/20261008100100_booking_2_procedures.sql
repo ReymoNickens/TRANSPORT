@@ -411,6 +411,28 @@ begin
 end
 $$;
 
+-- The next end of the academic year (setting concession.academic_year_end, MM-DD), for D25.
+create function app.next_academic_year_end(p_organisation_id uuid) returns timestamptz
+language plpgsql stable
+set search_path = ''
+as $$
+declare
+  v_md text;
+  v_tz text;
+  v_today date;
+  v_end date;
+begin
+  select value #>> '{}' into v_md from app.settings where organisation_id = p_organisation_id and key = 'concession.academic_year_end';
+  select timezone into v_tz from app.organisations where id = p_organisation_id;
+  v_today := (now() at time zone v_tz)::date;
+  v_end := make_date(extract(year from v_today)::int, split_part(coalesce(v_md, '07-31'), '-', 1)::int, split_part(coalesce(v_md, '07-31'), '-', 2)::int);
+  if v_end <= v_today then
+    v_end := (v_end + interval '1 year')::date;
+  end if;
+  return (v_end + 1) at time zone v_tz;
+end
+$$;
+
 -- ---------------------------------------------------------------------------
 -- Holds (11.3, 11.3a, 11.4, 11.6)
 -- ---------------------------------------------------------------------------

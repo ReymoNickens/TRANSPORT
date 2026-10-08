@@ -48,7 +48,7 @@ grant update on app.concession_verifications, app.bookings, app.booked_seats, ap
   app.outbox, app.notification_deliveries, app.exceptions to app_runtime;
 
 grant execute on function
-  app.random_code(int, text), app.is_late_payment_for(uuid), app.bookings_before_update(), app.booked_seats_before_write(),
+  app.random_code(int, text), app.is_late_payment_for(uuid), app.next_academic_year_end(uuid), app.bookings_before_update(), app.booked_seats_before_write(),
   app.seat_claims_before_write(), app.tickets_before_update(), app.ticket_credentials_before_update(),
   app.payment_attempts_before_update(), app.payments_before_update(), app.refund_counts(text), app.refunds_before_write(),
   app.webhook_events_before_update(), app.idempotency_keys_before_update(), app.ledger_posting_balances(),

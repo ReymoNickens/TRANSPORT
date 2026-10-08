@@ -12,6 +12,8 @@ export const errorCatalogue = {
   conflict: { status: 409, message: "This was changed by someone else. Refresh and try again." },
   already_exists: { status: 409, message: "Something with these details already exists." },
   rule_violation: { status: 422, message: "This change breaks one of the business rules." },
+  idempotency_mismatch: { status: 422, message: "This request key was already used for a different request." },
+  payment_unavailable: { status: 503, message: "Payments cannot be started right now. Your seats are still held; please try again in a moment." },
   organisation_unavailable: { status: 503, message: "This service is not available right now." },
   provider_unavailable: { status: 502, message: "A service we depend on is not responding. Please try again shortly." },
   internal_error: { status: 500, message: "Something went wrong on our side. Please try again." },

@@ -15,6 +15,14 @@ const schema = z.object({
   SMS_PROVIDER: z.enum(["fake", "arkesel"]).default("fake"),
   ARKESEL_API_KEY: z.string().optional(),
   ARKESEL_SENDER_ID: z.string().max(11).optional(),
+  PAYMENT_PROVIDER: z.enum(["fake", "paystack"]).default("fake"),
+  PAYSTACK_SECRET_KEY: z.string().startsWith("sk_").optional(),
+  // Ticket QR tokens, links and boarding codes are derived from this; at least 32 characters.
+  TICKET_TOKEN_SECRET: z.string().min(32).optional(),
+  // The public address of the app, for payment return pages and ticket links in text messages.
+  APP_BASE_URL: z.url().default("http://localhost:3000"),
+  // Background jobs are called with this bearer secret.
+  CRON_SECRET: z.string().min(24).optional(),
   // Set by Vercel: "production", "preview" or "development".
   VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
 });
