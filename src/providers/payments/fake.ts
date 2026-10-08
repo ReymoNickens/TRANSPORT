@@ -25,7 +25,7 @@ export class FakePaymentProvider implements PaymentProvider {
   async startPayment(input: StartPaymentInput): Promise<StartPaymentResult> {
     return {
       providerReference: input.attemptId,
-      checkoutUrl: `${this.baseUrl}/pay/fake/${input.attemptId}`,
+      checkoutUrl: `${this.baseUrl}/pay/fake/${input.attemptId}?ref=${encodeURIComponent(input.bookingReference)}`,
     };
   }
 
