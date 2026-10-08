@@ -6,7 +6,7 @@ of every working session.
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · 🧑 needs you (an account, a key or a business decision)
 
-**Now working on:** Phase D part 1 (server side) done → next is **Phase D part 2: the passenger screens**
+**Now working on:** Phase D (Slice 1, book and pay) done → next is **Phase E, Slice 2: conductor boarding scan**
 
 ---
 
@@ -89,9 +89,13 @@ of every working session.
 - ⬜ 🧑 Run the SQL file in the Supabase SQL editor (see chat)
 - ⬜ 🧑 Paystack test secret key, a ticket secret and a job secret in Vercel
 
-**Part 2, passenger screens ⬜ (next)**
-- ⬜ Search, seat map, passenger details, review and pay, waiting screen, ticket with QR
-- ⬜ Trips, guest ticket lookup, the fake checkout page
+**Part 2, passenger screens ✅ (built and tested end to end in a browser)**
+- ✅ Search with nearby dates, seat map, passenger details, review and pay, waiting screen, tickets with QR and boarding code
+- ✅ My trips (signed in), ticket link page (`/t/…`), the fake checkout page for testing
+- ✅ Demo data for previews: `supabase/demo-data.sql` (Accra → Kasoa → Winneba → Cape Coast, one 52-seat coach, daily 07:00)
+- ⬜ Guest ticket lookup by reference + phone + text code (moved to Phase E)
+- ⬜ Refund policy text on the booking page comes from settings (now fixed to the D14 defaults)
+- ⬜ 🧑 Run the job every minute (`/api/jobs/tick`: payment checks, text messages): Vercel cron or Supabase pg_net, after the secrets are set
 
 ### Phase E: Boarding and operations (Slices 2 to 5)
 - ⬜ Slice 2: conductor scanning, manual lookup, duplicate refusal, paper manifest
@@ -131,3 +135,4 @@ of every working session.
 | 2026-10-08 | Supabase and Vercel projects created; app live in London. Phase B built: locations, routes, vehicles, seat layouts, fares, concessions, fees, pricing. |
 | 2026-10-08 | Phase C built: schedules, journey generation, bus and crew assignment, snapshots, journey status machine, high-risk confirmation. 105 tests. |
 | 2026-10-08 | Phase D part 1 built: holds, payments (Paystack and fake), late payments, tickets, text messages, ledger. 129 tests. |
+| 2026-10-08 | Phase D part 2 built: passenger screens. Full flow tested in a browser: search → seats → pay (fake) → tickets with QR. |
