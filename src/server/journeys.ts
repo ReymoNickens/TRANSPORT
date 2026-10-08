@@ -69,7 +69,7 @@ export async function getJourney(tx: Tx, id: string): Promise<Journey> {
     where j.id = ${id}`);
   const seats = await tx<JourneySeat[]>`
     select id, seat_number, seat_type, row_number, column_number, position, state
-    from app.journey_seats where journey_id = ${id} order by row_number, column_number`;
+    from app.journey_seats where journey_id = ${id} and retired_at is null order by row_number, column_number`;
   const staff = await tx<JourneyStaffMember[]>`
     select s.id, s.user_id, u.full_name, s.staff_role, s.assigned_at
     from app.journey_staff s join app.users u on u.id = s.user_id

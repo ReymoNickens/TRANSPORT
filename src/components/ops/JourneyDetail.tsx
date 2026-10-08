@@ -8,6 +8,7 @@ import { formatCedis, formatDay, formatTime } from "@/lib/format";
 import { Button, Field, Notice } from "../ui";
 import { AttentionRow, journeyStatus, SmallButton, type AttentionItem } from "./Dashboard";
 import type { OpsCan } from "./OpsShell";
+import { VehicleChange } from "./VehicleChange";
 
 type Journey = {
   id: string;
@@ -263,7 +264,7 @@ function BusSection({ journey, can, onChange }: { journey: Journey; can: OpsCan;
         </div>
       ) : null}
       {can.assignBus && journey.state !== "DRAFT" && !["CANCELLED", "COMPLETED", "DEPARTED"].includes(journey.state) ? (
-        <Notice>This departure is on sale, so changing its bus moves passengers between seats. That uses the bus change guide, which is coming next.</Notice>
+        <VehicleChange journeyId={journey.id} currentRegistration={journey.vehicleRegistration} onDone={onChange} />
       ) : null}
     </section>
   );

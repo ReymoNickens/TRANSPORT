@@ -6,7 +6,7 @@ of every working session.
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · 🧑 needs you (an account, a key or a business decision)
 
-**Now working on:** Phase E Slice 4 (cancellations and refunds) done → next is **Phase E, Slice 5: replacing a bus after seats are sold**
+**Now working on:** Phase E done → next is **Phase F: money and hardening (Slice 6)**
 
 ---
 
@@ -141,7 +141,14 @@ of every working session.
 - ✅ Refunds page for Finance: failed first, then waiting for approval, then being paid
 - ⬜ Moving passengers of a cancelled departure to the next bus at no charge (they are told about it for now)
 - ⬜ Paystack transfer to mobile money when a refund is not possible (Finance pays by hand for now)
-- ⬜ Slice 5: replacing a vehicle after seats are sold, with seat remapping
+**Slice 5: changing the bus after seats are sold ✅ (built and tested; in the SQL file waiting for you)**
+- ✅ Guided screen: choose the new bus, see where every passenger will sit (and by which rule), settle anyone the rules could not place, confirm
+- ✅ The matching rules of spec 15.1, in booking order, giving the same result every time (tested)
+- ✅ Accessible seats only ever go to accessible seats; nobody pays more; a cheaper seat refunds the difference
+- ✅ A smaller bus is refused until everyone has a seat or a refund
+- ✅ Tickets and boarding codes stay the same; old seats are kept as history, never sold again; every move is recorded
+- ✅ Passengers are told their new seat by text message
+- ⬜ Breakdown during a trip (recovery bus with passengers on board, spec 15.4)
 
 ### Phase F: Money and hardening (Slice 6)
 - ⬜ Ledger (chart of accounts, postings that sum to zero)
@@ -180,3 +187,4 @@ of every working session.
 | 2026-10-08 | Phase E slice 3 part 1: manager dashboard, needs-attention queue, departure page, guided departure creation, booking lookup. 159 tests. |
 | 2026-10-08 | Phase E slice 3 part 2: route, bus, fare and schedule screens; booked departures protected from schedule changes. 164 tests. |
 | 2026-10-08 | Phase E slice 4: cancellations and refunds (policy, passenger and staff cancellation, journey cancellation, refund processing, Finance queue). 179 tests. |
+| 2026-10-08 | Phase E slice 5: changing the bus after seats are sold, with deterministic seat matching. 186 tests. |

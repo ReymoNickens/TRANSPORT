@@ -110,8 +110,8 @@ export async function getSeatMap(tx: Tx, journeyId: string, query: z.infer<typeo
     select j.id, j.state, r.name as route_name,
            j.scheduled_departure_at + make_interval(mins => o.departure_offset_minutes) as departs_at,
            j.scheduled_departure_at + make_interval(mins => d.arrival_offset_minutes) as arrives_at,
-           (select max(row_number) from app.journey_seats where journey_id = j.id) as rows,
-           (select max(column_number) from app.journey_seats where journey_id = j.id) as columns
+           (select max(row_number) from app.journey_seats where journey_id = j.id and retired_at is null) as rows,
+           (select max(column_number) from app.journey_seats where journey_id = j.id and retired_at is null) as columns
     from app.journeys j
     join app.routes r on r.id = j.route_id
     join app.route_stops o on o.id = ${query.origin} and o.route_id = j.route_id
@@ -127,7 +127,7 @@ export async function getSeatMap(tx: Tx, journeyId: string, query: z.infer<typeo
              when exists (select 1 from app.seat_claims c where c.journey_seat_id = js.id and c.state = 'HELD' and c.expires_at > now()) then 'held'
              else 'available'
            end as status
-    from app.journey_seats js where js.journey_id = ${journeyId}
+    from app.journey_seats js where js.journey_id = ${journeyId} and js.retired_at is null
     order by js.row_number, js.column_number`;
   const fares = await tx<{ seatType: string; amountPesewas: number; currency: string }[]>`
     select seat_type, amount_pesewas, currency from app.journey_fares

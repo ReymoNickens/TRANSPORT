@@ -248,7 +248,7 @@ export function BusDetail() {
   async function setStatus(status: Vehicle["status"]) {
     const warning =
       status === "retired"
-        ? "Retire this bus? It cannot be given new departures. Departures it already has keep it until you change their bus."
+        ? "Retire this bus for good? It cannot be given new departures. A bus that still has coming departures cannot be retired until their bus is changed."
         : status === "maintenance"
           ? "Send this bus to the workshop? It cannot be given new departures until it is back in service."
           : "Put this bus back in service?";

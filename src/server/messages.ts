@@ -80,7 +80,7 @@ export async function sendDueMessages(ctx: Ctx, sms: SmsProvider, config: Config
 }
 
 /** Short, plain messages carrying the booking reference and no more personal data than needed (17.3 rule 6). */
-type Payload = { bookingId?: string; paymentId?: string; refundId?: string; reason?: string; seats?: string[] };
+type Payload = { bookingId?: string; paymentId?: string; refundId?: string; reason?: string; seats?: string[]; assignmentId?: string };
 
 async function buildMessages(tx: Tx, eventType: string, payload: Payload, config: Config): Promise<Outgoing[]> {
   if (!payload.bookingId) return [];
@@ -140,6 +140,28 @@ async function buildMessages(tx: Tx, eventType: string, payload: Payload, config
       template: eventType,
       text: `Booking ${booking.reference} was paid twice. The extra payment is being refunded to you. Your tickets are unchanged.`,
     }];
+  }
+  if (eventType === "seat_changed" && payload.assignmentId) {
+    const moves = await tx<{ phone: string; registration: string; fromSeat: string; toSeat: string }[]>`
+      select p.phone, v.registration, f.seat_number as from_seat, t.seat_number as to_seat
+      from app.seat_remaps m
+      join app.booked_seats s on s.id = m.booked_seat_id
+      join app.booking_passengers p on p.id = s.passenger_id
+      join app.journey_seats f on f.id = m.from_journey_seat_id
+      join app.journey_seats t on t.id = m.to_journey_seat_id
+      join app.vehicle_assignments a on a.id = m.vehicle_assignment_id
+      join app.vehicles v on v.id = a.vehicle_id
+      where m.vehicle_assignment_id = ${payload.assignmentId} and s.booking_id = ${payload.bookingId} and m.to_journey_seat_id is not null
+      order by t.row_number, t.column_number`;
+    if (!moves.length) return [];
+    const byPhone = new Map<string, string[]>();
+    for (const m of moves) byPhone.set(m.phone, [...(byPhone.get(m.phone) ?? []), m.fromSeat === m.toSeat ? `seat ${m.toSeat} (unchanged)` : `seat ${m.toSeat} (was ${m.fromSeat})`]);
+    const all = moves.map((m) => (m.fromSeat === m.toSeat ? m.toSeat : `${m.toSeat} (was ${m.fromSeat})`)).join(", ");
+    const lead = `The bus for ${trip} has changed to ${moves[0].registration}. Booking ${booking.reference}:`;
+    const tail = "Your ticket and boarding code stay the same.";
+    const messages = [...byPhone.entries()].map(([recipient, seats]) => ({ recipient, template: eventType, text: `${lead} ${seats.join(", ")}. ${tail}` }));
+    if (!byPhone.has(booking.purchaserPhone)) messages.push({ recipient: booking.purchaserPhone, template: `${eventType}_purchaser`, text: `${lead} seats ${all}. ${tail}` });
+    return messages;
   }
   if (eventType === "booking_cancelled") {
     const seats = payload.seats?.length ? `Seat${payload.seats.length > 1 ? "s" : ""} ${payload.seats.join(", ")}` : "Your seats";

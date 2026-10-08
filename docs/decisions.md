@@ -105,6 +105,11 @@ can change any of them.
 | A31 | E | Cancelling a journey is refused once anyone has boarded. Passengers are told the next departure on the route in their text message; moving their booking to it at no charge is not built yet | Spec 15.2 steps 4, 15.4 |
 | A32 | E | `refund.approval_threshold_pesewas` defaults to 0, meaning every passenger refund inside the policy is approved automatically | Spec 16.3 "default none" |
 | A33 | E | Bookings made before refund-policy snapshots existed keep the policy in force when the change was applied | Spec 16.1 |
+| A34 | E | The bus-change rules keep the seat type: same seat number, same row, adjacent row, same window or aisle side, then (added) the nearest seat of the same type, before manual review. Keeping a group in adjacent rows is not attempted beyond what these rules give | Spec 15.1; the extra rule avoids manual review when a same-type seat is free |
+| A35 | E | Unpaid holds that are still live are moved with paid passengers and keep their hold time. Only paid seats can be refunded from the bus-change screen | Spec 15.1 rule 1 "old claims RELEASED, new claims CONFIRMED" |
+| A36 | E | A seat the manager picks of a different type keeps the passenger's sold seat type and price on the booking; if the new seat type's fare is lower, the difference is refunded automatically | Spec 15.1 "never charged more" |
+| A37 | E | The bus-change preview carries a fingerprint of the plan; applying with a different plan is refused, so the change is always the one the manager saw | Spec 15.1 rule 5 |
+| A38 | E | The bus of a journey cannot be changed here once anyone has boarded (the breakdown procedure, 15.4, comes later) | Spec 15.4 |
 | A28 | E | Saving the route guide makes the route and its fare table live together; changing fares later copies the live table, edits the copy and makes it live after confirmation | Spec 8.3, 8.4 "Change a fare on a journey already on sale"; decision A1 versioning |
 | A7 | B | Business-rule refusals come from the database with SQLSTATE BR001 and a plain message, shown to managers as is | Spec 8.5: plain-English confirmation and recovery |
 
