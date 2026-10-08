@@ -117,6 +117,12 @@ can change any of them.
 | A28 | E | Saving the route guide makes the route and its fare table live together; changing fares later copies the live table, edits the copy and makes it live after confirmation | Spec 8.3, 8.4 "Change a fare on a journey already on sale"; decision A1 versioning |
 | A7 | B | Business-rule refusals come from the database with SQLSTATE BR001 and a plain message, shown to managers as is | Spec 8.5: plain-English confirmation and recovery |
 
+## Client and naming
+
+- The product is called **BDKtravels**. The manager is **Bash**.
+- Screens for the manager and staff use short, simple, everyday English, with no technical words
+  (no "reconciliation", "ledger", "webhook" and so on on screen). The aim is that Bash feels the system is easy.
+
 ## Change history
 
 | Date | Decision | Change | By |

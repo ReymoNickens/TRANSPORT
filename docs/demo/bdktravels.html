@@ -1,4 +1,4 @@
-<title>Campus Coach</title>
+<title>BDKtravels</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Schibsted+Grotesk:wght@400;500;600;700&family=Martian+Mono:wght@400;600&display=swap">
@@ -320,8 +320,8 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
         <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="13" rx="3" fill="#FFC629"/><rect x="5.5" y="6.5" width="13" height="5" rx="1" fill="#0E5A3B"/><circle cx="7.5" cy="19" r="2" fill="#FFC629"/><circle cx="16.5" cy="19" r="2" fill="#FFC629"/></svg>
       </div>
       <div>
-        <div class="brand-name">Campus Coach</div>
-        <div class="brand-sub">Student travel · Ghana · Prototype for review</div>
+        <div class="brand-name">BDKtravels</div>
+        <div class="brand-sub">Bus tickets for students · Ghana</div>
       </div>
     </div>
     <nav class="modes" aria-label="Which app">
@@ -333,7 +333,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 
   <div class="blind" aria-live="polite">
     <div class="blind-text" id="blind">Accra Circle → Cape Coast UCC · 07:00</div>
-    <div class="blind-meta">GR-2468-24<br>Coach C1 · 52 seats</div>
+    <div class="blind-meta">GR-2468-24<br>52 seats</div>
   </div>
 
   <main class="stage" id="stage">
@@ -341,7 +341,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
     <section class="device-wrap" id="device"></section>
   </main>
 
-  <p class="foot">Example data for demonstration. Payments, text messages and scans are simulated; the real system runs these through Paystack and Arkesel.</p>
+  <p class="foot">This is a sample to show how it works. No real money is used.</p>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -414,7 +414,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
       <h2>${title}</h2>
       <p>${body}</p>
       <ol class="steps">${steps.map((s, i) => `<li class="${i < current ? "done" : i === current ? "now" : ""}"><span class="dot">${i < current ? "✓" : i + 1}</span><span>${s}</span></li>`).join("")}</ol>
-      ${behind ? `<div class="behind fade-in"><strong>Behind the scenes</strong>${behind}</div>` : ""}`;
+      ${behind ? `<div class="behind fade-in"><strong>Good to know</strong>${behind}</div>` : ""}`;
   }
 
   function phone(inner) {
@@ -439,15 +439,15 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
     const dep = departures[p.dep];
     setBlind(`Accra Circle → Cape Coast UCC · ${dep.time}`);
     const behind = {
-      search: "Only the operator's own buses and fares. Search reads live seats, so a sold-out bus says so before anyone picks it.",
-      results: "Prices come from the server's fare table, never the phone. The student discount is checked against a student number.",
-      seats: "A tapped seat is held for this passenger for 10 minutes. The database refuses a second claim on the same seat, so it can never be sold twice, even if 100 people tap it at once.",
-      details: "One ticket per seat. Each traveller gets their own text message with their own ticket link and boarding code.",
-      pay: "Paystack's hosted checkout handles the money. The phone saying 'paid' is never trusted: the server waits for Paystack's signed confirmation.",
-      paying: "If the confirmation is slow, the server asks Paystack directly every minute. A payment that arrives late still gets the same seat, a same-class seat, or an automatic refund.",
-      ticket: "The QR code holds only a random code; no name, phone or price. The first scan wins, so a forwarded screenshot cannot board twice.",
+      search: "Students see only real BDKtravels buses and real prices. A full bus shows as sold out.",
+      results: "BDKtravels sets the price, not the phone. Students get 10% off with their student number.",
+      seats: "The seat is kept for you for 10 minutes. Two people can never get the same seat, even if they tap at the same time.",
+      details: "Every traveller gets their own ticket by text message.",
+      pay: "Pay with MTN, Telecel or AirtelTigo. The ticket only comes after the money really arrives.",
+      paying: "If the payment is slow, the system keeps checking. If something goes wrong, the money goes back by itself.",
+      ticket: "A copied QR code cannot be used twice. No network at the station? The 6-letter code works too.",
     }[p.step];
-    renderStory("Passenger app", "Book a real seat in under a minute", "A student going home for the weekend, on a mid-range Android phone with patchy data.", pSteps, pIndex[p.step], behind);
+    renderStory("Passenger app", "Book a seat in one minute", "A student going home for the weekend, on her phone.", pSteps, pIndex[p.step], behind);
 
     let html = "";
     if (p.step === "search") {
@@ -500,12 +500,12 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
         <div class="legend"><span><i></i>Free</span><span><i class="t"></i>Taken</span><span><i class="m"></i>Yours</span><span><i class="p"></i>Front row · ${ced(PREMIUM)}</span></div>
         <div class="coach"><div class="coach-front"><span>Front · door</span><span class="wheel" aria-hidden="true"></span></div>${rows.join("")}</div>
         <div class="dock">
-          <div class="dock-row"><span>${p.seats.length ? `Seat${p.seats.length > 1 ? "s" : ""} <b class="mono">${p.seats.join(", ")}</b>` : "Tap a free seat"}</span>${p.seats.length ? `<span class="timer" id="timer">10:00 held</span>` : ""}</div>
+          <div class="dock-row"><span>${p.seats.length ? `Seat${p.seats.length > 1 ? "s" : ""} <b class="mono">${p.seats.join(", ")}</b>` : "Tap a free seat"}</span>${p.seats.length ? `<span class="timer" id="timer">10:00 left</span>` : ""}</div>
           <button class="btn" type="button" id="toDetails" ${p.seats.length ? "" : "disabled"}>${p.seats.length ? `Continue · ${ced(pr.total)}` : "Continue"}</button>
         </div>`;
     } else if (p.step === "details") {
       html = `
-        <div class="screen-head"><button class="back" type="button" data-go="seats" aria-label="Back">${icons.back}</button><div><div class="screen-title">Who is travelling?</div><div class="screen-sub">Seat ${esc(p.seats[0])} · <span class="timer" id="timer">held</span></div></div></div>
+        <div class="screen-head"><button class="back" type="button" data-go="seats" aria-label="Back">${icons.back}</button><div><div class="screen-title">Who is travelling?</div><div class="screen-sub">Seat ${esc(p.seats[0])} · <span class="timer" id="timer">saved</span></div></div></div>
         <div class="field"><label class="label" for="pname">Full name</label><input id="pname" value="${esc(p.name)}" autocomplete="name"></div>
         <div class="field"><label class="label" for="pphone">Phone number (for your ticket by text)</label><input id="pphone" value="${esc(p.phone)}" inputmode="tel"></div>
         ${p.student ? `<div class="field"><label class="label" for="pstud">Student number</label><input id="pstud" value="${esc(p.studentNo)}"><span class="screen-sub">Bring your student ID: the conductor checks it at boarding.</span></div>` : ""}
@@ -515,7 +515,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
     } else if (p.step === "pay") {
       const pr = price();
       html = `
-        <div class="screen-head"><button class="back" type="button" data-go="details" aria-label="Back">${icons.back}</button><div><div class="screen-title">Review and pay</div><div class="screen-sub">Seats held for you · <span class="timer" id="timer">held</span></div></div></div>
+        <div class="screen-head"><button class="back" type="button" data-go="details" aria-label="Back">${icons.back}</button><div><div class="screen-title">Review and pay</div><div class="screen-sub">Seats saved for you · <span class="timer" id="timer">saved</span></div></div></div>
         <div class="summary">
           <div><span>${p.seats.length} seat${p.seats.length > 1 ? "s" : ""} · ${dep.time} Accra → Cape Coast</span><span class="num">${ced(pr.base)}</span></div>
           ${pr.disc ? `<div style="color:var(--ok)"><span>Student fare (10%)</span><span class="num">−${ced(pr.disc)}</span></div>` : ""}
@@ -526,7 +526,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
         <div class="networks" role="group" aria-label="Mobile money network">
           ${[["MTN", "#FFCB05", "#1A1A1A", "MoMo"], ["Telecel", "#E60000", "#fff", "Cash"], ["AirtelTigo", "#0033A0", "#fff", "Money"]].map(([n, bg, fg, s]) => `<button type="button" class="net" data-net="${n}" aria-pressed="${p.net === n}"><i style="background:${bg};color:${fg}">${n[0]}</i>${n}<span class="screen-sub" style="font-size:11px">${s}</span></button>`).join("")}
         </div>
-        <p class="screen-sub" style="margin:0">Cancel 24 hours or more before departure: full fare back. 6 to 24 hours: half. If we cancel, you get everything back.</p>
+        <p class="screen-sub" style="margin:0">Cancel 1 day before: money back. Cancel on the day: half back. If we cancel: all your money back.</p>
         <div style="flex:1"></div>
         <button class="btn momo" type="button" id="paynow">Pay ${ced(pr.total)} with ${p.net}</button>`;
     } else if (p.step === "paying") {
@@ -536,8 +536,8 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
           <div class="pulse">${icons.phone}</div>
           <div class="screen-title">Approve the prompt on your phone</div>
           <div class="screen-sub">We sent a ${p.net} MoMo request for ${ced(pr.total)} to ${esc(p.phone.replace(/\d(?=\d{3})/g, "•"))}.</div>
-          <div class="momo-prompt">Paystack wants to debit ${ced(pr.total)} from your wallet for CAMPUS COACH.<br>Enter MoMo PIN to approve:<br>[ • • • • ]</div>
-          <div class="screen-sub" id="payStatus">Waiting for confirmation…</div>
+          <div class="momo-prompt">BDKTRAVELS wants ${ced(pr.total)} from your wallet.<br>Enter MoMo PIN to pay:<br>[ • • • • ]</div>
+          <div class="screen-sub" id="payStatus">Waiting for your payment…</div>
         </div>`;
     } else if (p.step === "ticket") {
       html = `
@@ -553,12 +553,12 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
           <div class="perf" aria-hidden="true"></div>
           <div class="qr-zone">
             <div class="qr" id="qr" role="img" aria-label="Boarding QR code"></div>
-            <div class="screen-sub">No signal at the station? Give the conductor this code:</div>
+            <div class="screen-sub">No network? Show the conductor this code:</div>
             <div class="code">5UTY6T</div>
             ${p.student ? `<div class="chip warn">Bring your student ID</div>` : ""}
           </div>
         </div>
-        <div class="sms fade-in"><small>Text message · CampusCoach</small>Booking K7Q2M9XF confirmed. Accra to Cape Coast, ${dep.time}. Seat ${esc(p.seats[0])}: campuscoach.gh/t/x8Kq… code 5UTY6T</div>
+        <div class="sms fade-in"><small>Text message · BDKtravels</small>Booking K7Q2M9XF confirmed. Accra to Cape Coast, ${dep.time}. Seat ${esc(p.seats[0])}: bdktravels.com/t/x8Kq… code 5UTY6T</div>
         <button class="btn ghost" type="button" id="again">Book another trip</button>`;
     }
     $("#device").innerHTML = `<div class="device-wrap">${phone(html)}</div>`;
@@ -572,7 +572,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
       const el = $("#timer");
       if (!el || !state.p.holdEnds) return;
       const s = Math.max(0, Math.round((state.p.holdEnds - Date.now()) / 1000));
-      el.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} held`;
+      el.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} left`;
     };
     tick();
     holdTimer = setInterval(tick, 1000);
@@ -584,13 +584,13 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
     document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
     document.querySelectorAll("[data-day]").forEach((b) => b.addEventListener("click", () => { p.day = Number(b.dataset.day); render(); }));
     $("#student")?.addEventListener("click", () => { p.student = !p.student; render(); });
-    $("#swap")?.addEventListener("click", () => toast("Return trips work the same way: Cape Coast → Accra"));
+    $("#swap")?.addEventListener("click", () => toast("Going back home works the same way."));
     $("#find")?.addEventListener("click", () => go("results"));
     document.querySelectorAll("[data-dep]").forEach((b) => b.addEventListener("click", () => { p.dep = Number(b.dataset.dep); p.seats = []; go("seats"); }));
     document.querySelectorAll("[data-seat]").forEach((b) => b.addEventListener("click", () => {
       const n = b.dataset.seat;
       if (taken.has(n)) return toast(`Seat ${n} is taken. Pick a light seat.`);
-      if (held.has(n)) return toast(`Seat ${n} is held by someone paying right now.`);
+      if (held.has(n)) return toast(`Someone is paying for seat ${n} right now.`);
       if (p.seats.includes(n)) p.seats = p.seats.filter((s) => s !== n);
       else if (p.seats.length >= 6) return toast("Up to 6 seats per booking.");
       else { p.seats.push(n); if (!p.holdEnds) p.holdEnds = Date.now() + 600000; }
@@ -608,7 +608,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
     document.querySelectorAll("[data-net]").forEach((b) => b.addEventListener("click", () => { p.net = b.dataset.net; render(); }));
     $("#paynow")?.addEventListener("click", () => {
       go("paying");
-      setTimeout(() => { const s = $("#payStatus"); if (s) s.textContent = "Paystack confirmed the payment. Issuing your ticket…"; }, 2300);
+      setTimeout(() => { const s = $("#payStatus"); if (s) s.textContent = "Payment received. Making your ticket…"; }, 2300);
       setTimeout(() => { if (state.p.step === "paying") { state.p.token = "ccq_" + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2); go("ticket"); toast("Ticket sent to " + p.phone); } }, 3600);
     });
     $("#again")?.addEventListener("click", () => { p.seats = []; p.holdEnds = 0; go("search"); });
@@ -624,24 +624,24 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
   const scans = [
     { ok: true, name: "Ama Mensah", seat: "11B", from: "Circle Station", to: "Cape Coast UCC", fare: "Student", student: true },
     { ok: true, name: "Kwame Asare", seat: "4A", from: "Circle Station", to: "Winneba", fare: "Standard" },
-    { ok: false, title: "Already boarded at 06:41 by Kofi", name: "Kwame Asare", seat: "4A", note: "The same ticket was scanned before. Check the passenger's face and student ID." },
-    { ok: false, title: "Different journey", name: "Efua Owusu", seat: "9C", note: "This ticket is for Accra to Kumasi, 10:30. Send the passenger to the station desk." },
+    { ok: false, title: "Already boarded at 06:41 by Kofi", name: "Kwame Asare", seat: "4A", note: "This ticket was used before. Check the person and their student ID." },
+    { ok: false, title: "Wrong bus", name: "Efua Owusu", seat: "9C", note: "This ticket is for the 10:30 bus to Kumasi. Send them to the office." },
     { ok: true, name: "Yaw Boateng", seat: "2C", from: "Kasoa Junction", to: "Cape Coast UCC", fare: "Standard" },
-    { ok: false, title: "This ticket was cancelled", name: "Abena Ofori", seat: "6D", note: "Cancelled yesterday and refunded. The seat was resold." },
+    { ok: false, title: "This ticket was cancelled", name: "Abena Ofori", seat: "6D", note: "Cancelled yesterday. The money was paid back." },
   ];
-  const cSteps = ["Today's journey", "Start boarding", "Scan each ticket", "Confirm and board", "Record departure"];
+  const cSteps = ["Today's bus", "Start boarding", "Scan each ticket", "Let them in", "Bus leaves"];
 
   function conductor() {
     const c = state.c;
     setBlind("Accra Circle → Cape Coast UCC · 07:00 · Boarding");
     const current = c.step === "home" ? 0 : c.step === "scan" ? 2 : c.step === "result" ? 3 : 4;
     const behind = {
-      home: "Conductors see only the journeys they are rostered on, and only the passenger details boarding needs.",
-      scan: "Each scan is checked by the server in a fixed order: real ticket, this journey, boarding open, not used, paid. Every refusal is logged with the device and the conductor.",
-      result: "Confirming is one step in the database: two conductors confirming the same ticket at the same instant gives exactly one boarding (tested with 20 at once).",
-      left: "No signal at the bus park? The conductor prints a numbered passenger sheet beforehand, ticks it, and enters the ticks when signal returns.",
+      home: "The conductor only sees his own bus and his own passengers.",
+      scan: "Each ticket is checked in a second. Fake, old or used tickets are stopped.",
+      result: "A ticket works only once, even if two phones scan it at the same time.",
+      left: "No network at the station? Print the passenger list before, and tick names by hand.",
     }[c.step];
-    renderStory("Conductor app", "Board a full coach before 7:00", "Kofi, the conductor, at Circle Station with a phone and a queue of students.", cSteps, current, behind);
+    renderStory("Conductor app", "Fill the bus before 7:00", "Kofi, the conductor, at Circle Station with his phone.", cSteps, current, behind);
 
     const pct = Math.round((c.boarded / 52) * 100);
     let html = `
@@ -654,15 +654,15 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
       html += `
         <button class="btn momo" type="button" id="cScan">Scan tickets</button>
         <div class="recent">
-          <div class="recent-item"><span>Find by code, phone or name</span><span class="chip">Manual</span></div>
+          <div class="recent-item"><span>Find a passenger</span><span class="chip">Manual</span></div>
           <div class="recent-item"><span>Passenger list</span><span class="chip">52 seats</span></div>
-          <div class="recent-item"><span>Paper sheet for no signal</span><span class="chip">Sheet no. 14</span></div>
+          <div class="recent-item"><span>Paper list (no network)</span><span class="chip">Sheet no. 14</span></div>
         </div>`;
     } else if (c.step === "scan") {
       html += `
         <div class="viewfinder" role="img" aria-label="Camera view, scanning"><div class="frame"><span></span><span></span><span></span><span></span></div><div class="scanline"></div><div class="hint">Point at the passenger's QR code</div></div>
-        <button class="btn" type="button" id="cRead">Read next ticket</button>
-        <button class="btn ghost" type="button" id="cDepart">Record departure</button>`;
+        <button class="btn" type="button" id="cRead">Scan next ticket</button>
+        <button class="btn ghost" type="button" id="cDepart">Bus is leaving</button>`;
     } else if (c.step === "result") {
       const r = scans[c.idx % scans.length];
       html += r.ok ? `
@@ -672,7 +672,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
           <dl><dt>From</dt><dd>${r.from}</dd><dt>To</dt><dd>${r.to}</dd><dt>Fare</dt><dd>${r.fare}</dd></dl>
           ${r.student ? `<div class="check-id">Check student ID</div>` : ""}
         </div>
-        <button class="btn" type="button" id="cConfirm">Confirm boarding</button>` : `
+        <button class="btn" type="button" id="cConfirm">Let them in</button>` : `
         <div class="result bad fade-in">
           <div class="result-title">${icons.cross} ${r.title}</div>
           <dl><dt>Name</dt><dd>${r.name}</dd><dt>Seat</dt><dd>${r.seat}</dd></dl>
@@ -680,7 +680,7 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
         </div>
         <button class="btn ghost" type="button" id="cNext">Next passenger</button>`;
     } else {
-      html += `<div class="result ok fade-in"><div class="result-title">${icons.check} Departed 07:02</div><div style="font-size:14px">${c.boarded} boarded. ${52 - c.boarded} seats marked as no-shows after arrival. The manager's dashboard updated.</div></div>
+      html += `<div class="result ok fade-in"><div class="result-title">${icons.check} Bus left at 07:02</div><div style="font-size:14px">${c.boarded} people on board. Bash can see this on his phone right now.</div></div>
         <button class="btn ghost" type="button" id="cReset">Start again</button>`;
     }
     $("#device").innerHTML = `<div class="device-wrap">${phone(html)}</div>`;
@@ -694,23 +694,23 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 
   // ---------------------------------------------------------------- operations
   const attention = [
-    { id: "bus", sev: "critical", text: "Bus missing: Accra → Kumasi, today 14:00", meta: "38 passengers booked · due in 2 hours · unassigned", action: "Assign GR-5521-25" },
-    { id: "refund", sev: "high", text: "A refund of GH₵ 72.00 could not be sent through Paystack", meta: "Booking ZS8FX4G2 · Finance · retry or pay by hand", action: "Retry" },
-    { id: "late", sev: "high", text: "Paid after the hold ended: passenger moved to seat 9C", meta: "Booking K3M8PQ2T · same class, same price", action: "Confirm re-seat" },
-    { id: "paper", sev: "normal", text: "Paper boardings not entered: Accra → Takoradi, yesterday 18:00", meta: "Conductor Esi · sheet no. 13", action: "Remind" },
+    { id: "bus", sev: "critical", text: "No bus yet: Accra → Kumasi, today 14:00", meta: "38 people booked · leaves in 2 hours", action: "Use bus GR-5521-25" },
+    { id: "refund", sev: "high", text: "Money back of GH₵ 72.00 did not go through", meta: "Booking ZS8FX4G2", action: "Try again" },
+    { id: "late", sev: "high", text: "Late payment: passenger given seat 9C instead", meta: "Same price · same kind of seat", action: "OK" },
+    { id: "paper", sev: "normal", text: "Paper list not typed in: Accra → Takoradi, yesterday", meta: "Conductor: Esi", action: "Remind Esi" },
   ];
   const board = [
-    ["05:30", "Cape Coast UCC", "GR-1173-22", 52, 52, "left", "Left 05:33"],
+    ["05:30", "Cape Coast UCC", "GR-1173-22", 52, 52, "left", "Left"],
     ["07:00", "Cape Coast UCC", "GR-2468-24", 46, 52, "boarding", "Boarding"],
-    ["08:15", "Kumasi Kejetia", "GR-3390-23", 61, 70, "sale", "On sale"],
-    ["10:30", "Cape Coast UCC", "GR-4402-25", 11, 52, "sale", "On sale"],
-    ["14:00", "Kumasi Kejetia", "No bus", 38, 70, "attn", "Needs a bus"],
-    ["17:30", "Takoradi", "GR-6018-24", 29, 52, "sale", "On sale"],
+    ["08:15", "Kumasi Kejetia", "GR-3390-23", 61, 70, "sale", "Selling"],
+    ["10:30", "Cape Coast UCC", "GR-4402-25", 11, 52, "sale", "Selling"],
+    ["14:00", "Kumasi Kejetia", "No bus", 38, 70, "attn", "No bus"],
+    ["17:30", "Takoradi", "GR-6018-24", 29, 52, "sale", "Selling"],
   ];
   const remap = [
     ["Ama Mensah", "11B", "11B", "Same seat"],
     ["Kwame Asare", "4A", "4A", "Same seat"],
-    ["Yaa Darko", "13D", "13C", "Nearest window"],
+    ["Yaa Darko", "13D", "13C", "Window, near"],
     ["Kofi Annan", "12C", "12C", "Same seat"],
     ["Akosua Badu", "1A", "1A", "Same seat"],
     ["Esi Quaye", "2D", "2C", "Same row"],
@@ -718,95 +718,95 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 
   function ops() {
     const o = state.o;
-    setBlind("Operations · Today · 6 departures · 237 passengers");
+    setBlind("Today · 6 buses · 237 passengers");
     const behind = {
-      today: "Nothing here is typed by hand: the needs-attention list is raised by the system the moment something goes wrong, and clears itself when it is fixed.",
-      bus: "Swapping a bus after seats are sold moves every passenger by fixed rules (same seat, same row, next row, same side). Tickets and codes do not change, and passengers get a text with their new seat.",
-      money: "Every day is matched against Paystack's own records. Any difference is listed in plain words. Finance signs the day off, and the books are proven to match to the pesewa.",
+      today: "This list fills itself. When something goes wrong, it shows here. When it is fixed, it goes away.",
+      bus: "Changing a bus is easy. Everyone keeps a seat, and each person gets a text with their seat number.",
+      money: "Every night the system checks the money. If anything is missing, it tells you.",
     }[o.tab];
-    renderStory("Manager console", "What needs my attention today?", "Efua runs operations from a laptop at head office, or her phone on the road.", ["Needs attention", "Departures", "Change a bus", "Money matches Paystack"], o.tab === "today" ? 1 : o.tab === "bus" ? 2 : 3, behind);
+    renderStory("Manager", "What do I need to do today?", "Bash checks everything from his phone or laptop.", ["To do list", "Buses today", "Change a bus", "Check the money"], o.tab === "today" ? 1 : o.tab === "bus" ? 2 : 3, behind);
 
-    const tabs = [["today", "Today"], ["bus", "Change a bus"], ["money", "Money"]];
+    const tabs = [["today", "Today"], ["bus", "Change bus"], ["money", "Money"]];
     let body = "";
     if (o.tab === "today") {
       const open = attention.filter((a) => !o.resolved.has(a.id));
       body = `
         <section class="attention">
-          <div class="band-title"><h3>Needs attention</h3><span class="screen-sub">${open.length ? `${open.length} open` : "All clear"}</span></div>
-          ${open.length ? open.map((a) => `<div class="alert ${a.sev}" id="al-${a.id}"><span class="stripe"></span><div style="min-width:0"><p>${a.text}</p><small>${a.meta}</small></div><button class="btn small" type="button" data-fix="${a.id}">${a.action}</button></div>`).join("") : `<div class="ledger-ok">${icons.check} Nothing needs you right now.</div>`}
+          <div class="band-title"><h3>To do</h3><span class="screen-sub">${open.length ? `${open.length} to do` : "All done"}</span></div>
+          ${open.length ? open.map((a) => `<div class="alert ${a.sev}" id="al-${a.id}"><span class="stripe"></span><div style="min-width:0"><p>${a.text}</p><small>${a.meta}</small></div><button class="btn small" type="button" data-fix="${a.id}">${a.action}</button></div>`).join("") : `<div class="ledger-ok">${icons.check} All done. Nothing to do.</div>`}
         </section>
         <section style="display:grid;gap:10px;min-width:0">
-          <div class="band-title"><h3>Departures today</h3><span class="screen-sub">Problems sort to the top</span></div>
+          <div class="band-title"><h3>Buses today</h3><span class="screen-sub">Problems at the top</span></div>
           <div class="board" role="table" aria-label="Departures today">
-            <div class="board-row head" role="row"><span>Time</span><span>To</span><span>Bus</span><span>Seats sold</span><span>Status</span></div>
+            <div class="board-row head" role="row"><span>Time</span><span>To</span><span>Bus</span><span>Seats sold</span><span>Now</span></div>
             ${[...board].sort((a, b) => (b[5] === "attn" && !o.resolved.has("bus")) - (a[5] === "attn" && !o.resolved.has("bus"))).map((r) => {
               const fixed = r[5] === "attn" && o.resolved.has("bus");
               const bus = fixed ? "GR-5521-25" : r[2];
-              const st = fixed ? ["sale", "On sale"] : [r[5], r[6]];
+              const st = fixed ? ["sale", "Selling"] : [r[5], r[6]];
               return `<div class="board-row" role="row"><span class="time">${r[0]}</span><span><span class="dest">${r[1]}</span><div class="sub">via ${r[1].startsWith("Cape") ? "Kasoa, Winneba" : r[1].startsWith("Kumasi") ? "Nkawkaw" : "Mankessim"}</div></span><span class="mono" style="font-size:12px">${bus}</span><span class="num">${r[3]} / ${r[4]}<div class="seatbar"><i style="width:${Math.round(r[3] / r[4] * 100)}%"></i></div></span><span class="status ${st[0]}">${st[1]}</span></div>`;
             }).join("")}
           </div>
         </section>
-        <section class="figures" aria-label="Today in figures">
-          <div class="fig"><span>Seats sold</span><b>237</b><small>+18% on last Friday</small></div>
-          <div class="fig"><span>Occupancy</span><b>72%</b></div>
-          <div class="fig"><span>Booked revenue</span><b>GH₵ 19,284.50</b></div>
-          <div class="fig"><span>Boarded</span><b>98</b></div>
-          <div class="fig"><span>Refunds owed</span><b>GH₵ 72.00</b></div>
+        <section class="figures" aria-label="Today in numbers">
+          <div class="fig"><span>Tickets sold</span><b>237</b><small>18% more than last Friday</small></div>
+          <div class="fig"><span>How full</span><b>72%</b></div>
+          <div class="fig"><span>Money in today</span><b>GH₵ 19,284.50</b></div>
+          <div class="fig"><span>On the bus</span><b>98</b></div>
+          <div class="fig"><span>To pay back</span><b>GH₵ 72.00</b></div>
         </section>`;
     } else if (o.tab === "bus") {
       body = `
         <div class="two">
           <div class="panel">
-            <h4>Coach GR-2468-24 has a cracked windscreen</h4>
-            <div class="screen-sub">07:00 Accra → Cape Coast · 46 passengers · replace with:</div>
+            <h4>Bus GR-2468-24 has a broken windscreen</h4>
+            <div class="screen-sub">7:00 bus to Cape Coast · 46 people · use this bus instead:</div>
             <div class="recent">
               <div class="recent-item" style="border-color:var(--forest)"><span><b>GR-5521-25</b> · Coach 2+2 · 52 seats</span><span class="chip ok">Free all day</span></div>
-              <div class="recent-item" style="opacity:.6"><span><b>GR-3390-23</b> · 70 seats</span><span class="chip bad">On the 08:15</span></div>
+              <div class="recent-item" style="opacity:.6"><span><b>GR-3390-23</b> · 70 seats</span><span class="chip bad">Busy at 8:15</span></div>
               <div class="recent-item" style="opacity:.6"><span><b>GR-0907-21</b> · Minibus · 18 seats</span><span class="chip bad">Too small for 46</span></div>
             </div>
-            <div class="behind"><strong>Safe by default</strong>A smaller bus is refused until every passenger has a seat or a refund. The change is only applied after the manager has seen this plan.</div>
+            <div class="behind"><strong>No mistakes</strong>If a bus is too small, the system will not allow it. You always see the new seats before you say yes.</div>
           </div>
           <div class="panel">
-            <h4>Where everyone sits on GR-5521-25</h4>
-            <div class="screen-sub">46 passengers · 41 keep their seat number · nobody pays more</div>
-            <div class="table-scroll"><table class="remap"><thead><tr><th>Passenger</th><th>Seat</th><th></th><th>New</th><th>Rule</th></tr></thead>
+            <h4>New seats on bus GR-5521-25</h4>
+            <div class="screen-sub">41 of 46 people keep the same seat. Nobody pays more.</div>
+            <div class="table-scroll"><table class="remap"><thead><tr><th>Name</th><th>Old seat</th><th></th><th>New seat</th><th>Why</th></tr></thead>
             <tbody>${remap.map((r, i) => `<tr id="rm-${i}"><td>${r[0]}</td><td class="mono">${r[1]}</td><td class="arrow">→</td><td class="mono"><b>${r[2]}</b></td><td><span class="chip ${r[3] === "Same seat" ? "ok" : "warn"}">${r[3]}</span></td></tr>`).join("")}
             <tr><td colspan="5" class="screen-sub">and 40 more…</td></tr></tbody></table></div>
-            <button class="btn" type="button" id="doRemap" ${o.remapped ? "disabled" : ""}>${o.remapped ? "Bus changed · 46 texts sent" : "Change the bus and text passengers"}</button>
+            <button class="btn" type="button" id="doRemap" ${o.remapped ? "disabled" : ""}>${o.remapped ? "Done · 46 texts sent" : "Change bus and send texts"}</button>
           </div>
         </div>`;
     } else {
       body = `
         <div class="two">
           <div class="panel">
-            <h4>Yesterday against Paystack</h4>
+            <h4>Yesterday's money</h4>
             <div class="recon">
-              <div><span>Paystack payments</span><b>214</b></div>
-              <div><span>Our payments</span><b>214</b></div>
-              <div><span>Settled to bank</span><b>GH₵ 18,402.50</b></div>
+              <div><span>Paid by phone</span><b>214</b></div>
+              <div><span>Tickets sold</span><b>214</b></div>
+              <div><span>Sent to your bank</span><b>GH₵ 18,402.50</b></div>
             </div>
-            <div class="ledger-ok">${icons.check} Every payment matches. No differences.</div>
-            <button class="btn" type="button" id="signoff" ${o.signed ? "disabled" : ""}>${o.signed ? "Signed off by Abena (Finance)" : "Sign off yesterday"}</button>
+            <div class="ledger-ok">${icons.check} Everything matches. Nothing is missing.</div>
+            <button class="btn" type="button" id="signoff" ${o.signed ? "disabled" : ""}>${o.signed ? "Checked by Abena" : "Mark yesterday as checked"}</button>
           </div>
           <div class="panel">
             <h4>This week</h4>
             <div class="recon">
-              <div><span>Booked revenue</span><b>GH₵ 96,210.00</b></div>
-              <div><span>Earned (completed trips)</span><b>GH₵ 81,445.50</b></div>
-              <div><span>Paystack fees</span><b>GH₵ 1,872.10</b></div>
+              <div><span>Money in</span><b>GH₵ 96,210.00</b></div>
+              <div><span>Trips done</span><b>GH₵ 81,445.50</b></div>
+              <div><span>Payment fees</span><b>GH₵ 1,872.10</b></div>
             </div>
-            <svg viewBox="0 0 320 110" width="100%" role="img" aria-label="Seats sold per day this week, rising to 237 today">
+            <svg viewBox="0 0 320 110" width="100%" role="img" aria-label="Tickets sold each day this week, up to 237 today">
               ${[118, 142, 131, 166, 189, 214, 237].map((v, i) => { const x = 18 + i * 44, h = Math.round(v / 250 * 80); return `<rect x="${x}" y="${92 - h}" width="26" height="${h}" rx="5" fill="${i === 6 ? "var(--momo)" : "var(--forest)"}" opacity="${i === 6 ? 1 : .8}"></rect><text x="${x + 13}" y="106" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="Schibsted Grotesk, sans-serif">${["Sat","Sun","Mon","Tue","Wed","Thu","Fri"][i]}</text>`; }).join("")}
               <text x="${18 + 6 * 44 + 13}" y="${92 - Math.round(237 / 250 * 80) - 5}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink)" font-family="Schibsted Grotesk, sans-serif">237</text>
             </svg>
-            <div class="ledger-ok">${icons.check} Report totals agree with the ledger to the pesewa.</div>
+            <div class="ledger-ok">${icons.check} All the numbers add up.</div>
           </div>
         </div>`;
     }
     $("#device").innerHTML = `
       <div class="console fade-in" style="width:100%">
-        <div class="console-bar"><nav class="console-nav" aria-label="Console">${tabs.map(([k, l]) => `<button type="button" data-tab="${k}" aria-pressed="${o.tab === k}">${l}</button>`).join("")}</nav><span class="screen-sub">Fri ${new Date().getDate()} · Efua Owusu · Operations</span></div>
+        <div class="console-bar"><nav class="console-nav" aria-label="Console">${tabs.map(([k, l]) => `<button type="button" data-tab="${k}" aria-pressed="${o.tab === k}">${l}</button>`).join("")}</nav><span class="screen-sub">Fri ${new Date().getDate()} · Bash · Manager</span></div>
         <div class="console-body">${body}</div>
       </div>`;
     document.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => { o.tab = b.dataset.tab; render(); }));
@@ -815,13 +815,13 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
       const el = $("#al-" + id);
       el?.classList.add("gone");
       setTimeout(() => { o.resolved.add(id); render(); }, 280);
-      toast({ bus: "GR-5521-25 assigned. The 14:00 is back on sale.", refund: "Refund sent to Paystack again.", late: "Re-seat confirmed. Passenger texted.", paper: "Reminder sent to Esi." }[id]);
+      toast({ bus: "Bus added. Tickets are selling again.", refund: "Trying again. The money will go back.", late: "Done. The passenger got a text.", paper: "Reminder sent to Esi." }[id]);
     }));
     $("#doRemap")?.addEventListener("click", () => {
       remap.forEach((_, i) => setTimeout(() => $("#rm-" + i)?.classList.add("flash"), i * 120));
-      setTimeout(() => { o.remapped = true; render(); toast("46 passengers moved and texted their seats."); }, remap.length * 120 + 400);
+      setTimeout(() => { o.remapped = true; render(); toast("Done. 46 people got their new seat by text."); }, remap.length * 120 + 400);
     });
-    $("#signoff")?.addEventListener("click", () => { o.signed = true; render(); toast("Yesterday signed off. The day is now closed."); });
+    $("#signoff")?.addEventListener("click", () => { o.signed = true; render(); toast("Yesterday is checked. Well done."); });
   }
 
   function render() {
