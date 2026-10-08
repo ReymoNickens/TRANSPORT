@@ -16,6 +16,11 @@ export type OpsCan = {
   fleet: boolean;
   fares: boolean;
   schedules: boolean;
+  cancelBooking: boolean;
+  cancelJourney: boolean;
+  refundRequest: boolean;
+  refundApprove: boolean;
+  refunds: boolean;
 };
 
 export function opsCan(actor: Actor): OpsCan {
@@ -30,6 +35,11 @@ export function opsCan(actor: Actor): OpsCan {
     fleet: hasPermission(actor, "fleet.manage"),
     fares: hasPermission(actor, "fare.manage"),
     schedules: hasPermission(actor, "schedule.manage"),
+    cancelBooking: hasPermission(actor, "booking.cancel.scope"),
+    cancelJourney: hasPermission(actor, "journey.cancel"),
+    refundRequest: hasPermission(actor, "refund.request"),
+    refundApprove: hasPermission(actor, "refund.approve"),
+    refunds: ["refund.approve", "payment.view", "refund.request"].some((code) => hasPermission(actor, code)),
   };
 }
 
@@ -50,6 +60,7 @@ export async function OpsShell({ children }: { children: (can: OpsCan) => ReactN
         {can.routes ? <Link href="/ops/routes" className="underline-offset-4 hover:underline">Routes</Link> : null}
         {can.fleet ? <Link href="/ops/fleet" className="underline-offset-4 hover:underline">Buses</Link> : null}
         {can.schedules ? <Link href="/ops/schedules" className="underline-offset-4 hover:underline">Schedules</Link> : null}
+        {can.refunds ? <Link href="/ops/refunds" className="underline-offset-4 hover:underline">Refunds</Link> : null}
         <Link href="/staff" className="underline-offset-4 hover:underline">Boarding app</Link>
       </nav>
       {children(can)}

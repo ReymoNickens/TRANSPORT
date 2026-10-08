@@ -22,8 +22,11 @@ export function trips(op: Operator, owner: Sql, prefix: string) {
   const secret = process.env.TICKET_TOKEN_SECRET!;
   const nextPhone = () => `+233${prefix}${String(1_000_000 + ++phoneCounter).padStart(7, "0")}`;
 
-  /** A live corridor and a 90-seat 2+1 coach, departing tomorrow (or `day` days ahead) at `time` UTC, on sale. */
-  async function newTrip(suffix: string, registration: string, time = "08:00", day = 1): Promise<Trip> {
+  /**
+   * A live corridor and a 90-seat 2+1 coach, departing tomorrow (or `day` days ahead) at `time` UTC,
+   * or at exactly `at` (an ISO time) when given, on sale.
+   */
+  async function newTrip(suffix: string, registration: string, time = "08:00", day = 1, at?: string): Promise<Trip> {
     const corridor = await liveCorridor(op, suffix);
     const bus = await as(op, async (tx: Tx) => {
       const vehicle = await createVehicle(tx, op.actorUserId, createVehicleInput.parse({ registration, vehicleType: "coach", capacity: 90 }));
@@ -32,7 +35,7 @@ export function trips(op: Operator, owner: Sql, prefix: string) {
       return vehicle.id;
     });
     const journey = await as(op, (tx: Tx) =>
-      createOneOffJourney(tx, op.actorUserId, { routeId: corridor.routeId, departureAt: `${daysFromToday(day)}T${time}:00Z`, vehicleId: bus }),
+      createOneOffJourney(tx, op.actorUserId, { routeId: corridor.routeId, departureAt: at ?? `${daysFromToday(day)}T${time}:00Z`, vehicleId: bus }),
     );
     await as(op, (tx: Tx) => publishJourney(tx, journey.id));
     const seats = await owner`select id, seat_number from app.journey_seats where journey_id = ${journey.id}`;

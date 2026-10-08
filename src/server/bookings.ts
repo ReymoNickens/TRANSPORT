@@ -6,6 +6,7 @@ import { normaliseGhanaPhone } from "@/lib/phone";
 import { priceBooking, type Concession, type FeeRule } from "@/domain/pricing";
 import { credentialSecrets, currentCredentials, sha256 } from "./credentials";
 import { ghanaPhone } from "./common";
+import { policyText } from "./cancellations";
 
 // ---------------------------------------------------------------------------
 // Search (spec 7.2, 7.3)
@@ -369,8 +370,9 @@ export async function getBooking(tx: Tx, bookingId: string, ticketSecret: string
     destinationName: string;
     departsAt: Date;
     arrivesAt: Date;
+    refundPolicy: Parameters<typeof policyText>[0];
   }[]>`
-    select b.id, b.reference, b.state, b.expires_at, b.total_pesewas, b.fees_pesewas, b.currency, b.price_breakdown,
+    select b.id, b.reference, b.state, b.expires_at, b.total_pesewas, b.fees_pesewas, b.currency, b.price_breakdown, b.refund_policy,
            r.name as route_name, ol.name as origin_name, dl.name as destination_name,
            j.scheduled_departure_at + make_interval(mins => o.departure_offset_minutes) as departs_at,
            j.scheduled_departure_at + make_interval(mins => d.arrival_offset_minutes) as arrives_at
@@ -397,6 +399,9 @@ export async function getBooking(tx: Tx, bookingId: string, ticketSecret: string
     select id, state, checkout_url, started_at from app.payment_attempts where booking_id = ${bookingId} order by started_at desc limit 1`;
   const [{ openRefund }] = await tx<{ openRefund: boolean }[]>`
     select exists (select 1 from app.refunds where booking_id = ${bookingId} and state in ('REQUESTED', 'APPROVED', 'PROCESSING')) as open_refund`;
+  const refunds = await tx<{ amountPesewas: number; state: string; kind: string; requestedAt: Date; processedAt: Date | null }[]>`
+    select amount_pesewas, state, kind, requested_at, processed_at from app.refunds
+    where booking_id = ${bookingId} and state <> 'REJECTED' order by requested_at`;
 
   const credentials = await currentCredentials(tx, seats.map((s) => s.ticketId).filter((id): id is string => !!id));
   return {
@@ -415,6 +420,9 @@ export async function getBooking(tx: Tx, bookingId: string, ticketSecret: string
     feesPesewas: booking.feesPesewas,
     currency: booking.currency,
     priceBreakdown: booking.priceBreakdown,
+    refundPolicy: policyText(booking.refundPolicy),
+    // Failed refunds are Finance's to fix; the passenger sees them as still on the way.
+    refunds: refunds.map((r) => ({ ...r, state: r.state === "FAILED" ? "PROCESSING" : r.state })),
     payment: attempt ? { state: attempt.state, checkoutUrl: attempt.state === "PENDING" ? attempt.checkoutUrl : null, startedAt: attempt.startedAt } : null,
     seats: seats.map((s) => {
       const credentialId = s.ticketId ? credentials.get(s.ticketId) : undefined;

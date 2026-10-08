@@ -46,7 +46,7 @@ export function TicketCard(t: TicketCardProps) {
       ) : (
         <p className="rounded-lg bg-border/50 p-3 text-sm">This ticket is {t.state?.toLowerCase() ?? "not issued yet"} and cannot be used to board.</p>
       )}
-      {t.fareType !== "Standard" ? <p className="text-sm">Bring your student ID: the conductor will check it at boarding.</p> : null}
+      {valid && t.fareType !== "Standard" ? <p className="text-sm">Bring your student ID: the conductor will check it at boarding.</p> : null}
     </article>
   );
 }

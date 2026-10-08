@@ -100,6 +100,11 @@ can change any of them.
 | A25 | E | Dashboard figures: seats sold and booked revenue count payments received today (Accra); refunds owed are refunds requested, approved, processing or failed | Spec 8.2a performance band |
 | A26 | E | A new departure is warned as a possible duplicate when the same route already leaves within an hour that day | Spec 8.4 "Create a duplicate departure" |
 | A27 | E | A schedule change or holiday never moves or cancels a departure that has a held, paid or travelled booking; it stays as it is and a "needs a decision" item is raised | Spec 8.4, 15, 23.1: cancelling a journey with passengers goes through the disruption procedure |
+| A29 | E | A passenger cancellation refunds the seat's fare after any student discount (the booking fee is kept); the "less the provider fee" band deducts this seat's share of Paystack's fee, in proportion to the seat's amount, rounded half up. An operator cancellation refunds the seat's whole amount including its share of fees | Spec 16.1, D14 |
+| A30 | E | Release 1 sends refunds by the Paystack refund route only. A refund Paystack refuses, or that fails after `refund.max_attempts` (5) tries 5, 10, 20, 40 minutes apart, goes to Finance, who pays by hand and records the reference; a different person confirms it. The Paystack transfer route is not built yet | Spec 16.4a, D32 |
+| A31 | E | Cancelling a journey is refused once anyone has boarded. Passengers are told the next departure on the route in their text message; moving their booking to it at no charge is not built yet | Spec 15.2 steps 4, 15.4 |
+| A32 | E | `refund.approval_threshold_pesewas` defaults to 0, meaning every passenger refund inside the policy is approved automatically | Spec 16.3 "default none" |
+| A33 | E | Bookings made before refund-policy snapshots existed keep the policy in force when the change was applied | Spec 16.1 |
 | A28 | E | Saving the route guide makes the route and its fare table live together; changing fares later copies the live table, edits the copy and makes it live after confirmation | Spec 8.3, 8.4 "Change a fare on a journey already on sale"; decision A1 versioning |
 | A7 | B | Business-rule refusals come from the database with SQLSTATE BR001 and a plain message, shown to managers as is | Spec 8.5: plain-English confirmation and recovery |
 

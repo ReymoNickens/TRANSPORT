@@ -80,6 +80,11 @@ export class PaystackProvider implements PaymentProvider {
     };
   }
 
+  async checkRefund(providerReference: string): Promise<RefundResult> {
+    const data = await this.call<{ status?: string; id?: number }>("GET", `/refund/${encodeURIComponent(providerReference)}`);
+    return { providerReference, status: data.status === "processed" ? "processed" : data.status === "failed" ? "failed" : "pending" };
+  }
+
   private async call<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
     let response: Response;
     try {

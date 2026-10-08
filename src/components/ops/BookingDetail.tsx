@@ -4,7 +4,10 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/client/api";
 import { formatCedis, formatDay, formatTime } from "@/lib/format";
+import { CancelPanel } from "../CancelPanel";
 import { Notice } from "../ui";
+import type { OpsCan } from "./OpsShell";
+import { BookingRefunds } from "./Refunds";
 
 type Booking = {
   reference: string;
@@ -33,14 +36,15 @@ const seatWords: Record<string, string> = {
 };
 
 /** One booking for staff: journey, passengers, seats, tickets and payment. Never the QR or boarding code. */
-export function BookingDetail() {
+export function BookingDetail({ can }: { can: OpsCan }) {
   const { reference } = useParams<{ reference: string }>();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
     api<Booking>(`/api/ops/bookings/${reference}`).then(setBooking).catch(setError);
-  }, [reference]);
+  }, [reference, refresh]);
 
   if (error) return <Notice tone="error">{error.message}</Notice>;
   if (!booking) return <Notice>Loading the booking…</Notice>;
@@ -74,7 +78,10 @@ export function BookingDetail() {
         <dt className="text-muted">Payment</dt>
         <dd>{booking.payment ? `${paymentWords[booking.payment.state] ?? booking.payment.state}, started ${formatDay(booking.payment.startedAt)} ${formatTime(booking.payment.startedAt)}` : "Not started"}</dd>
       </dl>
-      <Notice>Cancellations and refunds from this page are coming in the next slice.</Notice>
+      {can.cancelBooking && booking.seats.some((s) => s.state === "CONFIRMED") ? (
+        <CancelPanel path={`/api/ops/bookings/${booking.reference}/cancellation`} who="staff" onDone={() => setRefresh((n) => n + 1)} />
+      ) : null}
+      {can.refunds || can.bookings ? <BookingRefunds reference={booking.reference} can={can} refresh={refresh} /> : null}
     </div>
   );
 }

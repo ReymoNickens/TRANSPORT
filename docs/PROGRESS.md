@@ -6,7 +6,7 @@ of every working session.
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · 🧑 needs you (an account, a key or a business decision)
 
-**Now working on:** Phase E Slice 3 done → next is **Phase E, Slice 4: cancellations and refunds**
+**Now working on:** Phase E Slice 4 (cancellations and refunds) done → next is **Phase E, Slice 5: replacing a bus after seats are sold**
 
 ---
 
@@ -129,7 +129,18 @@ of every working session.
 - ✅ Schedules: create (route, time, days, usual bus), change with a preview of what happens to departures already created, holidays and one-off runs, pause, start again, end
 - ✅ Fixed: a schedule change or holiday no longer moves or cancels a departure that already has passengers; it asks a manager instead
 - ⬜ Usability test with real managers (spec 8.8) once the app is live
-- ⬜ Slice 4: cancellations, refund approval, refunds through Paystack, exception queue
+**Slice 4: cancellations and refunds ✅ (built and tested; in the SQL file waiting for you)**
+- ✅ The refund policy is shown to passengers before paying, and each booking keeps the policy it was sold under
+- ✅ Passengers cancel some or all seats from their booking page, seeing the refund for each seat first (tested in a browser)
+- ✅ A cancelled ticket stops working at once and the seat goes back on sale
+- ✅ Staff can cancel seats for a passenger and ask for a refund outside the policy; a different person approves it
+- ✅ Cancelling a departure shows how many passengers, the refund total and the exact text message, then refunds everyone in full including fees
+- ✅ A payment that arrives after its departure was cancelled is refunded, never given a seat on a bus that is not running
+- ✅ Refunds are sent through Paystack and checked until paid; failures are retried, then handed to Finance to pay by hand (confirmed by a second person)
+- ✅ Text messages: seats cancelled, journey cancelled (with the next bus), refund started, refund paid
+- ✅ Refunds page for Finance: failed first, then waiting for approval, then being paid
+- ⬜ Moving passengers of a cancelled departure to the next bus at no charge (they are told about it for now)
+- ⬜ Paystack transfer to mobile money when a refund is not possible (Finance pays by hand for now)
 - ⬜ Slice 5: replacing a vehicle after seats are sold, with seat remapping
 
 ### Phase F: Money and hardening (Slice 6)
@@ -168,3 +179,4 @@ of every working session.
 | 2026-10-08 | Phase E slice 2 built: boarding (scan, find, override, paper sheet). 152 tests. |
 | 2026-10-08 | Phase E slice 3 part 1: manager dashboard, needs-attention queue, departure page, guided departure creation, booking lookup. 159 tests. |
 | 2026-10-08 | Phase E slice 3 part 2: route, bus, fare and schedule screens; booked departures protected from schedule changes. 164 tests. |
+| 2026-10-08 | Phase E slice 4: cancellations and refunds (policy, passenger and staff cancellation, journey cancellation, refund processing, Finance queue). 179 tests. |

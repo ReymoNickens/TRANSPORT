@@ -118,12 +118,11 @@ export async function publishJourney(tx: Tx, id: string) {
 }
 
 /**
- * Cancels a journey (high-risk: a reason and fresh confirmation). Journeys
- * with confirmed tickets will go through the disruption procedure (15.2)
- * once bookings exist.
+ * Cancels a journey (high-risk: a reason and fresh confirmation) through the
+ * cancellation procedure (15.2): every passenger refunded in full and told.
  */
 export async function cancelJourney(tx: Tx, id: string, input: z.infer<typeof cancelJourneyInput>) {
-  await tx`select app.move_journey(${id}, 'CANCELLED', ${input.reason})`;
+  await tx`select app.cancel_journey(${id}, ${input.reason})`;
   return getJourney(tx, id);
 }
 

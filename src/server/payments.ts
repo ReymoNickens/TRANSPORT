@@ -7,6 +7,7 @@ import { env } from "@/lib/env";
 import type { PaymentProvider } from "@/providers/payments";
 import { PaymentProviderError } from "@/providers/payments/types";
 import { issueCredentials } from "./credentials";
+import { checkProcessingRefunds } from "./refunds";
 
 export const startPaymentInput = z.object({ method: z.enum(["mobile_money", "card", "any"]).default("any") });
 
@@ -146,6 +147,10 @@ async function processCallback(
       } else {
         log("warn", "payment.callback_unknown_reference", { correlationId: ctx.correlationId, provider: provider.name });
       }
+    } else if (kind === "refund") {
+      // Never trust the event's status: ask the provider about refunds still being paid (16.4).
+      await checkProcessingRefunds(ctx, provider, { force: true }, sql);
+      result = "applied";
     }
     await markEvent(ctx, eventId, result, null, sql);
     return result;

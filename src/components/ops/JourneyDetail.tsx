@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/client/api";
-import { formatDay, formatTime } from "@/lib/format";
-import { Button, Notice } from "../ui";
+import { formatCedis, formatDay, formatTime } from "@/lib/format";
+import { Button, Field, Notice } from "../ui";
 import { AttentionRow, journeyStatus, SmallButton, type AttentionItem } from "./Dashboard";
 import type { OpsCan } from "./OpsShell";
 
@@ -152,6 +152,8 @@ export function JourneyDetail({ can }: { can: OpsCan }) {
           )}
         </section>
       ) : null}
+
+      {can.cancelJourney && live && journey.state !== "DEPARTED" ? <CancelJourney journeyId={journey.id} onDone={reload} /> : null}
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">History</h2>
@@ -333,6 +335,85 @@ function CrewSection({ journey, can, live, onChange }: { journey: Journey; can: 
         </div>
       ) : null}
       {message ? <Notice tone="error">{message}</Notice> : null}
+    </section>
+  );
+}
+
+type CancellationPreview = {
+  passengers: number;
+  bookings: number;
+  refundTotalPesewas: number;
+  unpaidHolds: number;
+  nextDeparture: { id: string; label: string; freeSeats: number } | null;
+  messageTemplate: string;
+};
+
+/**
+ * Cancelling a departure (15.2): who is affected, the refund total and the
+ * exact text passengers receive are shown before anything happens (8.4).
+ */
+function CancelJourney({ journeyId, onDone }: { journeyId: string; onDone: () => void }) {
+  const [preview, setPreview] = useState<CancellationPreview | null>(null);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function open() {
+    setMessage(null);
+    try {
+      setPreview(await api<CancellationPreview>(`/api/ops/journeys/${journeyId}/cancellation`));
+    } catch (e) {
+      setMessage((e as ApiError).message);
+    }
+  }
+
+  async function cancel() {
+    if (!preview) return;
+    const who = preview.passengers ? `${preview.passengers} passenger${preview.passengers === 1 ? "" : "s"} will be refunded ${formatCedis(preview.refundTotalPesewas)} in total and sent a text message.` : "No passengers are booked.";
+    if (!window.confirm(`Cancel this departure? ${who} This cannot be undone.`)) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      await api(`/api/ops/journeys/${journeyId}/cancel`, { method: "POST", body: { reason } });
+      setPreview(null);
+      onDone();
+    } catch (e) {
+      const err = e as ApiError;
+      setMessage(err.code === "reconfirmation_required" ? "Enter your authenticator code again (sign out and in), then retry. Nothing has been changed." : `${err.message} Nothing has been changed.`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!preview) {
+    return (
+      <section className="flex flex-col gap-2">
+        <button type="button" className="self-start text-sm text-danger underline" onClick={open}>Cancel this departure</button>
+        {message ? <Notice tone="error">{message}</Notice> : null}
+      </section>
+    );
+  }
+
+  const text = preview.messageTemplate.replace("{reason}", reason.trim() || "…").replace("{refund}", "(their amount)");
+  return (
+    <section className="flex flex-col gap-3 rounded-xl border-2 border-danger p-4">
+      <h2 className="text-lg font-semibold">Cancel this departure</h2>
+      <ul className="list-disc pl-5 text-sm">
+        <li>{preview.passengers} passenger{preview.passengers === 1 ? "" : "s"} on {preview.bookings} booking{preview.bookings === 1 ? "" : "s"}</li>
+        <li>{formatCedis(preview.refundTotalPesewas)} refunded in total, including fees, automatically</li>
+        {preview.unpaidHolds ? <li>{preview.unpaidHolds} unpaid hold{preview.unpaidHolds === 1 ? "" : "s"} will end; a payment that still arrives is refunded</li> : null}
+        <li>{preview.nextDeparture ? `Passengers are pointed to the next bus: ${preview.nextDeparture.label} (${preview.nextDeparture.freeSeats} seats free)` : "There is no later departure on this route to offer"}</li>
+      </ul>
+      <Field label="Reason passengers will be told" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="the bus has broken down" />
+      <div className="rounded-lg bg-foreground/5 p-3 text-sm">
+        <p className="mb-1 font-medium">The text message each passenger receives:</p>
+        <p>{text}</p>
+      </div>
+      {message ? <Notice tone="error">{message}</Notice> : null}
+      <div className="flex gap-2">
+        <button type="button" className="h-12 rounded-lg border border-border px-4 font-medium" onClick={() => setPreview(null)}>Keep the departure</button>
+        <Button type="button" disabled={busy || reason.trim().length < 5} onClick={cancel}>{busy ? "Cancelling…" : "Cancel and refund everyone"}</Button>
+      </div>
     </section>
   );
 }

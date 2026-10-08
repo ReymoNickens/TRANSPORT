@@ -1,4 +1,5 @@
 import {
+  PaymentProviderError,
   type PaymentCheck,
   type PaymentProvider,
   type RefundResult,
@@ -20,6 +21,14 @@ export const FAKE_PROVIDER_SECRET = "fake-provider-secret-not-for-production";
 export class FakePaymentProvider implements PaymentProvider {
   readonly name = "fake" as const;
 
+  /**
+   * What the fake does with a refund, for tests: "processed" at once (the default),
+   * "pending" until checked, "refused" (cannot refund this payment) or "unreachable".
+   */
+  refundBehaviour: "processed" | "pending" | "refused" | "unreachable" = "processed";
+  /** What a later check of a pending refund reports. */
+  refundCheckResult: RefundResult["status"] = "processed";
+
   constructor(private readonly baseUrl: string) {}
 
   async startPayment(input: StartPaymentInput): Promise<StartPaymentResult> {
@@ -37,11 +46,18 @@ export class FakePaymentProvider implements PaymentProvider {
   verifyCallback(rawBody: string, headers: Headers): VerifiedCallback | null {
     if (!signatureMatches(FAKE_PROVIDER_SECRET, rawBody, headers.get("x-paystack-signature"))) return null;
     const event = JSON.parse(rawBody) as { event: string; data: { id: string; reference: string } };
-    return { eventId: `${event.event}:${event.data.id}`, kind: event.event.startsWith("charge.") ? "charge" : "other", reference: event.data.reference };
+    const kind = event.event.startsWith("charge.") ? "charge" : event.event.startsWith("refund.") ? "refund" : "other";
+    return { eventId: `${event.event}:${event.data.id}`, kind, reference: event.data.reference };
   }
 
-  async refund(): Promise<RefundResult> {
-    return { providerReference: `fake-refund-${Date.now()}`, status: "processed" };
+  async refund(reference: string): Promise<RefundResult> {
+    if (this.refundBehaviour === "unreachable") throw new PaymentProviderError("The fake provider did not respond", true);
+    if (this.refundBehaviour === "refused") throw new PaymentProviderError("The fake provider cannot refund this payment", false);
+    return { providerReference: `fake-refund-${reference}`, status: this.refundBehaviour };
+  }
+
+  async checkRefund(providerReference: string): Promise<RefundResult> {
+    return { providerReference, status: this.refundCheckResult };
   }
 }
 

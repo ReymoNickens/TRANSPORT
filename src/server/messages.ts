@@ -2,6 +2,7 @@ import { log } from "@/lib/api/log";
 import { withOrganisation, type RequestContext, type Sql, type Tx } from "@/lib/db";
 import { formatCedis } from "@/domain/money";
 import type { SmsProvider } from "@/providers/sms/types";
+import { journeyCancelledText, nextDeparture } from "./cancellations";
 import { credentialSecrets } from "./credentials";
 
 type Ctx = Pick<RequestContext, "organisationId" | "correlationId">;
@@ -25,7 +26,7 @@ export async function sendDueMessages(ctx: Ctx, sms: SmsProvider, config: Config
 
   for (const { id } of ids) {
     await withOrganisation(ctx, async (tx) => {
-      const [message] = await tx<{ id: string; eventType: string; payload: { bookingId?: string; paymentId?: string }; attempts: number }[]>`
+      const [message] = await tx<{ id: string; eventType: string; payload: Payload; attempts: number }[]>`
         select id, event_type, payload, attempts from app.outbox
         where id = ${id} and processed_at is null for update skip locked`;
       if (!message) return;
@@ -79,10 +80,12 @@ export async function sendDueMessages(ctx: Ctx, sms: SmsProvider, config: Config
 }
 
 /** Short, plain messages carrying the booking reference and no more personal data than needed (17.3 rule 6). */
-async function buildMessages(tx: Tx, eventType: string, payload: { bookingId?: string; paymentId?: string }, config: Config): Promise<Outgoing[]> {
+type Payload = { bookingId?: string; paymentId?: string; refundId?: string; reason?: string; seats?: string[] };
+
+async function buildMessages(tx: Tx, eventType: string, payload: Payload, config: Config): Promise<Outgoing[]> {
   if (!payload.bookingId) return [];
-  const [booking] = await tx<{ reference: string; purchaserPhone: string; totalPesewas: number; departsAt: Date; originName: string; destinationName: string }[]>`
-    select b.reference, b.purchaser_phone, b.total_pesewas,
+  const [booking] = await tx<{ reference: string; purchaserPhone: string; totalPesewas: number; departsAt: Date; originName: string; destinationName: string; routeId: string; journeyId: string; scheduledDepartureAt: Date }[]>`
+    select b.reference, b.purchaser_phone, b.total_pesewas, b.route_id, b.journey_id, j.scheduled_departure_at,
            j.scheduled_departure_at + make_interval(mins => o.departure_offset_minutes) as departs_at,
            ol.name as origin_name, dl.name as destination_name
     from app.bookings b
@@ -136,6 +139,36 @@ async function buildMessages(tx: Tx, eventType: string, payload: { bookingId?: s
       recipient: booking.purchaserPhone,
       template: eventType,
       text: `Booking ${booking.reference} was paid twice. The extra payment is being refunded to you. Your tickets are unchanged.`,
+    }];
+  }
+  if (eventType === "booking_cancelled") {
+    const seats = payload.seats?.length ? `Seat${payload.seats.length > 1 ? "s" : ""} ${payload.seats.join(", ")}` : "Your seats";
+    return [{
+      recipient: booking.purchaserPhone,
+      template: eventType,
+      text: `${seats} on booking ${booking.reference} (${trip}) cancelled. Those tickets can no longer be used. Any refund due is on its way.`,
+    }];
+  }
+  if (eventType === "journey_cancelled") {
+    const [refund] = await tx<{ total: number }[]>`
+      select coalesce(sum(amount_pesewas), 0)::bigint as total from app.refunds
+      where booking_id = ${payload.bookingId} and kind = 'operator_cancellation' and state <> 'REJECTED'`;
+    const next = await nextDeparture(tx, booking.routeId, booking.scheduledDepartureAt, booking.journeyId);
+    const text = journeyCancelledText({ reference: booking.reference, trip, reason: payload.reason ?? "the journey cannot run", refund: formatCedis(refund.total), next: next?.label ?? null });
+    const phones = await tx<{ phone: string }[]>`
+      select distinct p.phone from app.booking_passengers p where p.booking_id = ${payload.bookingId}`;
+    const recipients = new Set([booking.purchaserPhone, ...phones.map((p) => p.phone)]);
+    return [...recipients].map((recipient) => ({ recipient, template: eventType, text }));
+  }
+  if ((eventType === "refund_started" || eventType === "refund_completed") && payload.refundId) {
+    const [refund] = await tx<{ amountPesewas: number }[]>`select amount_pesewas from app.refunds where id = ${payload.refundId}`;
+    if (!refund) return [];
+    return [{
+      recipient: booking.purchaserPhone,
+      template: eventType,
+      text: eventType === "refund_started"
+        ? `A refund of ${formatCedis(refund.amountPesewas)} for booking ${booking.reference} has been started. Mobile money refunds usually arrive within a few days; card refunds can take up to 10 working days.`
+        : `Your refund of ${formatCedis(refund.amountPesewas)} for booking ${booking.reference} has been paid.`,
     }];
   }
   return [];

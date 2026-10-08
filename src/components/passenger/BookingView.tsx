@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { api, ApiError, bookingToken } from "@/lib/client/api";
 import { formatCedis, formatDay, formatTime } from "@/lib/format";
 import { Button, Notice } from "../ui";
+import { CancelPanel } from "../CancelPanel";
 import { TicketCard } from "./TicketCard";
 
 type Booking = {
@@ -17,6 +18,8 @@ type Booking = {
   totalPesewas: number;
   priceBreakdown: { subtotalPesewas: number; fees: { name: string; amountPesewas: number }[]; seats: { concessionPesewas: number }[] };
   payment: { state: string; checkoutUrl: string | null } | null;
+  refundPolicy: string[];
+  refunds: { amountPesewas: number; state: string; kind: string; requestedAt: string }[];
   seats: {
     seatNumber: string;
     passengerName: string;
@@ -119,9 +122,10 @@ export function BookingView() {
             ))}
             <div className="flex justify-between border-t border-border pt-2 text-base font-semibold"><dt>Total</dt><dd>{formatCedis(booking.totalPesewas)}</dd></div>
           </dl>
-          <p className="text-sm text-muted">
-            Cancellation: 24 hours or more before departure, the fare is refunded less the payment fee; 6 to 24 hours before, half the fare; under 6 hours, no refund. If we cancel, you get everything back.
-          </p>
+          <div className="text-sm text-muted">
+            <p className="font-medium">If you cancel</p>
+            <ul className="list-disc pl-5">{booking.refundPolicy.map((line) => <li key={line}>{line}</li>)}</ul>
+          </div>
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-medium">Pay with</legend>
             {([["mobile_money", "Mobile money (MTN, Telecel, AirtelTigo)"], ["card", "Card"]] as const).map(([value, label]) => (
@@ -167,6 +171,22 @@ export function BookingView() {
               />
             ) : null,
           )}
+          {booking.state === "CONFIRMED" && booking.seats.some((s) => s.ticket?.state === "VALID") ? (
+            <CancelPanel path={`/api/bookings/${reference}/cancellation`} headers={tokenHeader(reference)} onDone={load} />
+          ) : null}
+        </section>
+      ) : null}
+
+      {booking.refunds.length ? (
+        <section className="flex flex-col gap-1">
+          <h2 className="font-semibold">Refunds</h2>
+          <ul className="text-sm">
+            {booking.refunds.map((r, i) => (
+              <li key={i}>
+                {formatCedis(r.amountPesewas)}: {refundWords[r.state] ?? r.state}
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 
@@ -184,6 +204,18 @@ export function BookingView() {
       {booking.state === "CANCELLED" ? <Notice>This booking was cancelled.</Notice> : null}
     </div>
   );
+}
+
+const refundWords: Record<string, string> = {
+  REQUESTED: "waiting for approval",
+  APPROVED: "on its way",
+  PROCESSING: "on its way (mobile money usually within a few days, cards up to 10 working days)",
+  COMPLETED: "paid",
+};
+
+function tokenHeader(reference: string): Record<string, string> {
+  const token = bookingToken.get(reference);
+  return token ? { "x-booking-token": token } : {};
 }
 
 function useNow() {

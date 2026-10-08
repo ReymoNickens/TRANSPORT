@@ -54,7 +54,10 @@ export interface PaymentProvider {
   checkPayment(reference: string): Promise<PaymentCheck>;
   /** Proves a callback is genuine (13.2a); null when the signature is wrong. */
   verifyCallback(rawBody: string, headers: Headers): VerifiedCallback | null;
+  /** Asks the provider to return money for a charge (16.4a route paystack_refund). A non-retryable error means refused. */
   refund(reference: string, amountPesewas: number): Promise<RefundResult>;
+  /** Asks the provider how a refund it accepted is going. */
+  checkRefund(providerReference: string): Promise<RefundResult>;
 }
 
 /** A call to the provider failed. Retryable failures are never treated as a failed payment (13.2a rule 5). */
