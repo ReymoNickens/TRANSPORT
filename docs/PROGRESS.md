@@ -6,7 +6,7 @@ of every working session.
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · 🧑 needs you (an account, a key or a business decision)
 
-**Now working on:** Phase E Slice 3 part 1 (dashboard) done → next is **Slice 3 part 2: guided route, bus and fare set-up screens**
+**Now working on:** Phase E Slice 3 done → next is **Phase E, Slice 4: cancellations and refunds**
 
 ---
 
@@ -121,9 +121,14 @@ of every working session.
 - ✅ Create a departure, step by step: route → date and time → bus → "what passengers will see" with stop times and fares; warns about a possible duplicate
 - ✅ Look up a booking by reference or phone number and see its seats, tickets and payment
 
-**Slice 3, part 2 ⬜ (next)**
-- ⬜ Create a route step by step (stops in order, times between stops, who can get on and off)
-- ⬜ Buses and seat layouts, fare tables, schedules screens
+**Slice 3, part 2: set-up screens ✅ (built and tested)**
+- ✅ Create a route step by step: stops in order (or add a new place), minutes between stops, who can get on and off, fares for each trip (and premium seats), then "what passengers will see"
+- ✅ Route page: stops and times, live fares; change fares safely (tickets already sold keep their fare); retire a route
+- ✅ Add a bus step by step: details, seat arrangement from a familiar pattern with a seat-plan drawing, check
+- ✅ Bus page: seat-plan versions, in service / in the workshop / retired
+- ✅ Schedules: create (route, time, days, usual bus), change with a preview of what happens to departures already created, holidays and one-off runs, pause, start again, end
+- ✅ Fixed: a schedule change or holiday no longer moves or cancels a departure that already has passengers; it asks a manager instead
+- ⬜ Usability test with real managers (spec 8.8) once the app is live
 - ⬜ Slice 4: cancellations, refund approval, refunds through Paystack, exception queue
 - ⬜ Slice 5: replacing a vehicle after seats are sold, with seat remapping
 
@@ -162,3 +167,4 @@ of every working session.
 | 2026-10-08 | Phase D part 2 built: passenger screens. Full flow tested in a browser: search → seats → pay (fake) → tickets with QR. |
 | 2026-10-08 | Phase E slice 2 built: boarding (scan, find, override, paper sheet). 152 tests. |
 | 2026-10-08 | Phase E slice 3 part 1: manager dashboard, needs-attention queue, departure page, guided departure creation, booking lookup. 159 tests. |
+| 2026-10-08 | Phase E slice 3 part 2: route, bus, fare and schedule screens; booked departures protected from schedule changes. 164 tests. |

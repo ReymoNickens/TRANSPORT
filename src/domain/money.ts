@@ -56,3 +56,14 @@ export function formatCedis(pesewas: number): string {
   const rest = String(pesewas % 100).padStart(2, "0");
   return `GH₵ ${cedis.toLocaleString("en-GH")}.${rest}`;
 }
+
+/**
+ * Reads an amount in cedis as a person types it ("25", "25.5", "GH₵ 1,200.50")
+ * into whole pesewas, without floating point. Null when it is not an amount.
+ */
+export function parseCedis(input: string): number | null {
+  const text = input.replace(/gh₵|ghs|₵/gi, "").replace(/[\s,]/g, "");
+  const match = /^(\d{1,7})(?:\.(\d{1,2}))?$/.exec(text);
+  if (!match) return null;
+  return Number(match[1]) * 100 + Number((match[2] ?? "0").padEnd(2, "0"));
+}

@@ -22,6 +22,21 @@ export function Field({ label, hint, ...input }: { label: string; hint?: string 
   );
 }
 
+export function Select({ label, hint, children, ...select }: { label: string; hint?: string } & ComponentProps<"select">) {
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="text-sm font-medium">{label}</span>
+      <select
+        {...select}
+        className="h-12 rounded-lg border border-border bg-background px-3 text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
+      >
+        {children}
+      </select>
+      {hint ? <span className="text-sm text-muted">{hint}</span> : null}
+    </label>
+  );
+}
+
 export function Button({ children, ...props }: ComponentProps<"button">) {
   return (
     <button

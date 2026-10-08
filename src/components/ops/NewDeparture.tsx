@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/client/api";
 import { formatCedis, formatDay, formatDuration, formatTime, todayInAccra } from "@/lib/format";
 import { Button, Field, Notice } from "../ui";
+import { BackButton, Steps } from "./Guide";
 
 type RouteSummary = { id: string; name: string; originName: string; destinationName: string; durationMinutes: number | null; stopCount: number };
 type RouteStop = { id: string; sequence: number; locationName: string; arrivalOffsetMinutes: number; departureOffsetMinutes: number; boardingAllowed: boolean; dropoffAllowed: boolean };
@@ -108,13 +109,7 @@ export function NewDeparture() {
 
   return (
     <div className="flex flex-col gap-6">
-      <ol className="flex gap-2 text-sm" aria-label="Steps">
-        {steps.map((label, i) => (
-          <li key={label} className={`flex-1 border-t-4 pt-1 ${i <= step ? "border-accent font-medium" : "border-border text-muted"}`} aria-current={i === step ? "step" : undefined}>
-            {label}
-          </li>
-        ))}
-      </ol>
+      <Steps steps={steps} current={step} />
 
       {step === 0 ? (
         <section className="flex flex-col gap-3">
@@ -232,8 +227,4 @@ export function NewDeparture() {
       {step < 3 && message ? <Notice tone="error">{message}</Notice> : null}
     </div>
   );
-}
-
-function BackButton({ onClick }: { onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="h-12 rounded-lg border border-border px-4 font-medium">Back</button>;
 }

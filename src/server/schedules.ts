@@ -116,6 +116,10 @@ async function insertVersion(tx: Tx, organisationId: string, scheduleId: string,
             ${input.defaultVehicleId ?? null}, ${actorId})`;
 }
 
+/** A journey (alias j) with a booking that is held, being paid, paid or travelled. Such journeys are never moved or cancelled by a schedule change. */
+const hasLiveBookings = (tx: Tx) =>
+  tx`exists (select 1 from app.bookings b where b.journey_id = j.id and b.state in ('PENDING', 'PAYMENT_PENDING', 'CONFIRMED', 'COMPLETED'))`;
+
 type Affected = {
   id: string;
   serviceDate: string;
@@ -165,7 +169,6 @@ export async function applyScheduleChange(tx: Tx, id: string) {
 }
 
 async function affectedJourneys(tx: Tx, scheduleId: string): Promise<Affected[]> {
-  // Bookings arrive in phase D; until then no journey has any.
   return [
     ...(await tx<Affected[]>`
       with s as (
@@ -178,6 +181,7 @@ async function affectedJourneys(tx: Tx, scheduleId: string): Promise<Affected[]>
       ),
       planned as (
         select j.id, j.service_date, j.state, j.scheduled_departure_at, s.timezone, s.duration,
+               ${hasLiveBookings(tx)} as has_bookings,
                case
                  when e.kind = 'skip' then null
                  when e.kind in ('move', 'extra') then e.departure_time
@@ -192,7 +196,7 @@ async function affectedJourneys(tx: Tx, scheduleId: string): Promise<Affected[]>
       select id, service_date::text as service_date, state, scheduled_departure_at,
              (service_date + new_time) at time zone timezone as new_departure_at,
              (service_date + new_time) at time zone timezone + make_interval(mins => duration) as new_arrival_at,
-             false as has_bookings
+             has_bookings
       from planned
       order by service_date`),
   ];
@@ -205,7 +209,8 @@ export async function setScheduleStatus(tx: Tx, id: string, input: z.infer<typeo
 
 /**
  * Adds a holiday or one-off change (23.1 rule 4). If the day's journey was
- * already generated and has no bookings, it follows the exception now.
+ * already generated and has no bookings, it follows the exception now; if it
+ * has bookings it is left alone and raised for a manager's decision.
  */
 export async function addScheduleException(tx: Tx, actorId: string, scheduleId: string, input: z.infer<typeof exceptionInput>) {
   const schedule = one(await tx<{ organisationId: string }[]>`select organisation_id from app.schedules where id = ${scheduleId}`);
@@ -220,10 +225,18 @@ export async function addScheduleException(tx: Tx, actorId: string, scheduleId: 
       createdBy: actorId,
     })}`;
 
-  const [journey] = await tx<{ id: string; state: string }[]>`
-    select id, state from app.journeys
-    where schedule_id = ${scheduleId} and service_date = ${input.serviceDate} and state in ('DRAFT', 'SCHEDULED')`;
-  if (journey && input.kind === "skip") {
+  const [journey] = await tx<{ id: string; state: string; booked: boolean; label: string }[]>`
+    select j.id, j.state, ${hasLiveBookings(tx)} as booked, app.journey_label(j.id) as label from app.journeys j
+    where j.schedule_id = ${scheduleId} and j.service_date = ${input.serviceDate} and j.state in ('DRAFT', 'SCHEDULED')`;
+  let notice: string | null = null;
+  if (journey?.booked) {
+    // Passengers have seats on that day's departure: it stays as it is, and a manager decides (8.4, 15).
+    notice = `The departure ${journey.label} already has passengers, so it was not changed. It is on the dashboard for a decision.`;
+    await tx`select app.raise_exception(${schedule.organisationId}, 'schedule_change_on_booked_journey', 'high',
+      ${`schedule_exception:${journey.id}:${input.kind}:${input.departureTime ?? ""}`},
+      ${`Schedule change not applied: ${journey.label} has passengers (${input.reason})`},
+      'Decide whether to keep this departure, move it, or cancel it with refunds.', null, ${journey.id})`;
+  } else if (journey && input.kind === "skip") {
     await tx`select app.move_journey(${journey.id}, 'CANCELLED', ${input.reason})`;
   } else if (journey && input.departureTime) {
     await tx`
@@ -236,7 +249,7 @@ export async function addScheduleException(tx: Tx, actorId: string, scheduleId: 
   } else if (!journey && input.kind !== "skip") {
     await tx`select * from app.generate_journeys(${schedule.organisationId}, ${input.serviceDate}::date, 1)`;
   }
-  return getSchedule(tx, scheduleId);
+  return { ...(await getSchedule(tx, scheduleId)), notice };
 }
 
 export async function removeScheduleException(tx: Tx, exceptionId: string) {

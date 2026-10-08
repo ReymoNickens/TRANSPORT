@@ -99,6 +99,8 @@ can change any of them.
 | A24 | E | "Bus missing" opens for a journey with no bus within `journeys.bus_missing_alert_hours` (24) of departure, and "paper boardings not entered" for an arrived journey with an open sheet; both close themselves when fixed | Spec 18.6, 14.7 step 4, 9.11 |
 | A25 | E | Dashboard figures: seats sold and booked revenue count payments received today (Accra); refunds owed are refunds requested, approved, processing or failed | Spec 8.2a performance band |
 | A26 | E | A new departure is warned as a possible duplicate when the same route already leaves within an hour that day | Spec 8.4 "Create a duplicate departure" |
+| A27 | E | A schedule change or holiday never moves or cancels a departure that has a held, paid or travelled booking; it stays as it is and a "needs a decision" item is raised | Spec 8.4, 15, 23.1: cancelling a journey with passengers goes through the disruption procedure |
+| A28 | E | Saving the route guide makes the route and its fare table live together; changing fares later copies the live table, edits the copy and makes it live after confirmation | Spec 8.3, 8.4 "Change a fare on a journey already on sale"; decision A1 versioning |
 | A7 | B | Business-rule refusals come from the database with SQLSTATE BR001 and a plain message, shown to managers as is | Spec 8.5: plain-English confirmation and recovery |
 
 ## Change history
