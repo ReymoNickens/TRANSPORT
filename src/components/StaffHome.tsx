@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 import { currentActor } from "@/lib/auth/actor";
 import { SignOutButton } from "./SignOutButton";
+import { StaffJourneys } from "./staff/StaffJourneys";
 import { Notice } from "./ui";
 
 /**
- * What a signed-in staff member may do. The operational screens arrive in
- * later phases; this proves sign-in, the second factor and permissions end to end.
+ * The signed-in staff member's home. In the staff boarding app it lists the
+ * journeys they work on; the operations screens arrive in a later slice.
  */
 export async function StaffHome({ area }: { area: "staff" | "ops" }) {
   const signInPath = `/${area}/sign-in`;
@@ -14,6 +15,15 @@ export async function StaffHome({ area }: { area: "staff" | "ops" }) {
   if (actor.assuranceLevel !== "aal2") redirect(signInPath);
 
   const permissions = [...new Set(actor.grants.map((grant) => grant.code))].sort();
+  if (area === "staff") {
+    return (
+      <div className="flex flex-col gap-4">
+        <h2 className="text-lg font-medium">Today</h2>
+        <StaffJourneys />
+        <SignOutButton redirectTo={signInPath} />
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-4">
       <Notice>You are signed in with your second factor.</Notice>

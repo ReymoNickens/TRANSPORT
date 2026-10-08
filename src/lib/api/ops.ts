@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { requireActor } from "@/lib/auth/actor";
-import { isHighRisk, requireFreshConfirmation, requirePermission, type Actor } from "@/lib/auth/permissions";
+import { hasPermission, isHighRisk, requireFreshConfirmation, requirePermission, type Actor } from "@/lib/auth/permissions";
 import { withOrganisation, type Tx } from "@/lib/db";
 import { AppError } from "./errors";
 import { apiRoute, readJson, type ApiContext } from "./handler";
@@ -28,16 +28,19 @@ export const idParams = z.object({ id: z.uuid() });
  * permission checked on the server, validated input, and one transaction
  * scoped to the actor's organisation with the actor recorded for audit.
  * A high-risk permission also needs a reason in the body and a fresh
- * second-factor confirmation (spec 5).
+ * second-factor confirmation (spec 5). A list of permissions means any one
+ * of them is enough.
  */
 export function opsRoute<BS extends Schema | undefined = undefined, QS extends Schema | undefined = undefined, PS extends Schema | undefined = undefined>(
-  options: { permission: string; body?: BS; query?: QS; params?: PS; status?: number },
+  options: { permission: string | string[]; body?: BS; query?: QS; params?: PS; status?: number },
   run: (args: OpsArgs<Out<BS>, Out<QS>, Out<PS>>) => Promise<unknown>,
 ) {
   return apiRoute<Record<string, string>>(async (ctx, rawParams) => {
     const actor = await requireActor({ correlationId: ctx.correlationId });
     if (actor.kind !== "staff") throw new AppError("forbidden");
-    requirePermission(actor, options.permission);
+    const codes = Array.isArray(options.permission) ? options.permission : [options.permission];
+    const permission = codes.find((code) => hasPermission(actor, code)) ?? codes[0];
+    requirePermission(actor, permission);
 
     let params = rawParams as Out<PS>;
     if (options.params) {
@@ -49,7 +52,7 @@ export function opsRoute<BS extends Schema | undefined = undefined, QS extends S
       ? options.query.parse(Object.fromEntries(new URL(ctx.request.url).searchParams))
       : undefined) as Out<QS>;
     const body = (options.body ? await readJson(ctx.request, options.body) : undefined) as Out<BS>;
-    const reason = isHighRisk(actor, options.permission)
+    const reason = isHighRisk(actor, permission)
       ? requireFreshConfirmation(actor, (body as { reason?: string } | undefined)?.reason)
       : undefined;
 

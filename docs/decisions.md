@@ -90,6 +90,11 @@ can change any of them.
 | A15 | D | QR token, ticket-link token and boarding code are derived from a server secret (TICKET_TOKEN_SECRET) and the credential id; only hashes are stored | Spec 14.2: the token is never stored, yet the passenger must be able to see the QR again |
 | A16 | D | Each traveller gets one text with their own ticket link and boarding code; the purchaser gets a summary if they are not travelling | Spec 14.1 one ticket per seat, 17.3 rule 6 minimal data |
 | A17 | D | A self-declared student number is accepted (D10) and re-declaring it after expiry re-verifies it | D25 release 1 |
+| A18 | E | Staff see a journey's passengers when they are on its crew, or hold booking.view.scope (station agents, managers, support) | Spec 5 scopes: conductor "assigned journeys", station agent "assigned station"; station scoping waits for station assignments |
+| A19 | E | Scanning and manual boarding need the journey in BOARDING. A conductor starts boarding from the bus, at most `boarding.opens_minutes_before` (120) minutes before departure | Spec 14.3 "Boarding has not opened" |
+| A20 | E | A manager's override (ticket.override.board) can board against a payment problem, boarding not yet open, or a departed journey. It cannot board a cancelled, replaced or already boarded ticket, or a ticket for another journey | Spec 14.4; the ticket state machine and one-record-per-ticket rule still hold |
+| A21 | E | A paper manifest can be printed from `boarding.manifest_export_hours` (24) hours before departure; sheets are numbered per organisation; paper boardings are entered once boarding has started, including after departure and arrival | Spec 14.7 |
+| A22 | E | No-show marking and expiring unused tickets at arrival are left to slice 3, so late paper entries are never blocked | Spec 9.4 NO_SHOW, 14.7 step 3 |
 | A7 | B | Business-rule refusals come from the database with SQLSTATE BR001 and a plain message, shown to managers as is | Spec 8.5: plain-English confirmation and recovery |
 
 ## Change history

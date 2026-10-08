@@ -91,6 +91,23 @@ describe("opsRoute", () => {
   });
 });
 
+describe("opsRoute with a list of permissions", () => {
+  const either = opsRoute({ permission: ["journey.view.assigned", "booking.view.scope"] }, async () => ({ ok: true }));
+  const callEither = () => either(new Request("https://example.test/api/staff/journeys"));
+
+  it("accepts any one of them", async () => {
+    state.actor = staff(["booking.view.scope"]);
+    expect((await callEither()).status).toBe(200);
+    state.actor = staff(["journey.view.assigned"]);
+    expect((await callEither()).status).toBe(200);
+  });
+
+  it("refuses someone with none of them", async () => {
+    state.actor = staff(["fleet.manage"]);
+    expect((await callEither()).status).toBe(403);
+  });
+});
+
 describe("opsRoute for a high-risk permission", () => {
   it("asks for a fresh authenticator code when the last one is old", async () => {
     state.actor = highRiskGrant({ secondFactorAt: new Date(Date.now() - 60 * 60 * 1000) });

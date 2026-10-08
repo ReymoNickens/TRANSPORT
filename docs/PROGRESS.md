@@ -6,7 +6,7 @@ of every working session.
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · 🧑 needs you (an account, a key or a business decision)
 
-**Now working on:** Phase D (Slice 1, book and pay) done → next is **Phase E, Slice 2: conductor boarding scan**
+**Now working on:** Phase E Slice 2 (boarding) done → next is **Phase E, Slice 3: the manager's dashboard and guided journey creation**
 
 ---
 
@@ -86,7 +86,7 @@ of every working session.
 - ✅ Text messages through the outbox (one per traveller, retried, never sent twice)
 - ✅ Ledger postings that must balance; refunds can never exceed the payment
 - ✅ 24 integrity tests from spec 24.2 pass (100 people grabbing one seat, a callback replayed 1,000 times, …)
-- ⬜ 🧑 Run the SQL file in the Supabase SQL editor (see chat)
+- ⬜ 🧑 Run `supabase/manual/2026-10-08_phase_c7_d_and_e2.sql` in the Supabase SQL editor
 - ⬜ 🧑 Paystack test secret key, a ticket secret and a job secret in Vercel
 
 **Part 2, passenger screens ✅ (built and tested end to end in a browser)**
@@ -98,7 +98,19 @@ of every working session.
 - ⬜ 🧑 Run the job every minute (`/api/jobs/tick`: payment checks, text messages): Vercel cron or Supabase pg_net, after the secrets are set
 
 ### Phase E: Boarding and operations (Slices 2 to 5)
-- ⬜ Slice 2: conductor scanning, manual lookup, duplicate refusal, paper manifest
+**Slice 2, boarding ✅ (built and tested; included in the SQL file waiting for you on Supabase)**
+- ✅ Staff "Today" list: the journeys you are on today and tomorrow, with boarded counts
+- ✅ Start boarding, record departure, record arrival from the bus
+- ✅ Scan the QR with the phone camera (or a scanner, or by typing): checks in the order of spec 14.3 with plain answers
+- ✅ The passenger's name, seat, stops and fare shown first, with "Check student ID" for student fares, then one Confirm button
+- ✅ Already boarded → "Already boarded at 06:12 by Kofi"; every refused scan written to the audit log
+- ✅ 20 people confirming the same ticket at once → exactly one boarding (tested)
+- ✅ A lost reply can be retried safely (same result, never boarded twice)
+- ✅ Find a passenger by boarding code, booking reference, ticket number, phone or name, and board manually
+- ✅ Manager override with a reason, for payment problems
+- ✅ No signal: numbered printed passenger sheet with boarding codes; ticks entered later with the time from the sheet; a ticket cancelled after printing is flagged for review
+- ✅ Boarding records can never be changed or removed
+- ⬜ Not yet seen in a real browser: staff sign-in needs Supabase with an authenticator app, which this sandbox can't do. Please try it once the SQL file has run (see chat)
 - ⬜ Slice 3: manager dashboard, guided route, schedule and journey creation
 - ⬜ Slice 4: cancellations, refund approval, refunds through Paystack, exception queue
 - ⬜ Slice 5: replacing a vehicle after seats are sold, with seat remapping
@@ -136,3 +148,4 @@ of every working session.
 | 2026-10-08 | Phase C built: schedules, journey generation, bus and crew assignment, snapshots, journey status machine, high-risk confirmation. 105 tests. |
 | 2026-10-08 | Phase D part 1 built: holds, payments (Paystack and fake), late payments, tickets, text messages, ledger. 129 tests. |
 | 2026-10-08 | Phase D part 2 built: passenger screens. Full flow tested in a browser: search → seats → pay (fake) → tickets with QR. |
+| 2026-10-08 | Phase E slice 2 built: boarding (scan, find, override, paper sheet). 152 tests. |
