@@ -76,13 +76,38 @@ TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npm ru
 
 CI runs them on every push.
 
-## Deploying (later, when we go live)
+## Hosted environments
 
-1. **Supabase**: create a project, then `npx supabase link` and `npx supabase db push`.
-   - Authentication → Hooks → Send SMS: HTTPS hook to `https://<your-domain>/api/hooks/send-sms`; copy its secret into `SEND_SMS_HOOK_SECRET`.
-   - Authentication → Providers → Phone: enable; set the code expiry to 600 seconds and the length to 6 (spec 19.1).
-   - Authentication → Multi-factor: enable TOTP.
-   - Run `select app.create_organisation('<Name>', '<slug>');` once in the SQL editor.
-2. **Vercel**: import the GitHub repo and add the environment variables from `.env.example`.
-   `DATABASE_URL` is the Supabase **transaction pooler** connection string.
-3. **Arkesel**: an API key and an approved sender ID. Set `SMS_PROVIDER=arkesel`.
+| Service | Name | Notes |
+|---|---|---|
+| Supabase | project `transport` (ref `wrspeyuvmyxmjhvsnbrt`), London (eu-west-2) | Migrations applied; organisation `pilot` created |
+| Vercel | project `transport` (team "reymonickens' projects") | Linked to this repo; every push deploys |
+
+### How the app logs in to the database
+
+The app never uses the Supabase `postgres` admin password. It logs in as
+`app_api`, a role that can do nothing except switch to `app_runtime`, the
+restricted role every business transaction runs as (decision T5). It
+cannot bypass row-level security.
+
+`DATABASE_URL` is the Supabase **Transaction pooler** connection string
+(Supabase → Connect → Transaction pooler) with the user changed from
+`postgres.<ref>` to `app_api.<ref>` and the `app_api` password filled in.
+
+To rotate the password, run in the Supabase SQL editor
+`alter role app_api password '<new password>';` and update `DATABASE_URL`
+in Vercel.
+
+### Applying new migrations to Supabase
+
+`npx supabase link --project-ref wrspeyuvmyxmjhvsnbrt` once, then
+`npx supabase db push`. (Claude can also apply them through the Supabase
+connector; it then renames the local file to the version Supabase recorded.)
+
+### Still to switch on (Supabase dashboard)
+
+- Authentication → Sign In / Providers → **Phone**: enable; code length 6, expiry 600 seconds (spec 19.1).
+- Authentication → Hooks → **Send SMS hook**: HTTPS, URL `https://<vercel-domain>/api/hooks/send-sms`;
+  generate the secret and put it in Vercel as `SEND_SMS_HOOK_SECRET`.
+- Authentication → Multi-factor: **TOTP** enabled.
+- Arkesel: put `ARKESEL_API_KEY`, `ARKESEL_SENDER_ID` in Vercel and set `SMS_PROVIDER=arkesel`.

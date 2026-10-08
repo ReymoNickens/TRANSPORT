@@ -19,12 +19,12 @@ of every working session.
 
 ## Accounts and keys you will need to create 🧑
 
-Not needed yet: everything runs locally until we deploy.
-
-- ⬜ 🧑 Supabase project (free tier is fine for development)
-- ⬜ 🧑 Vercel account connected to this GitHub repo
+- ✅ Supabase project `transport` created (London, free plan); migrations applied, organisation `pilot` created, security advisor clean
+- ✅ Vercel project `transport` created and linked to this repo; public settings added
+- ⬜ 🧑 Add `DATABASE_URL` in Vercel (instructions in the chat / README "How the app logs in to the database")
+- ⬜ 🧑 Supabase dashboard: switch on Phone sign-in, the Send-SMS hook and TOTP (README "Still to switch on")
 - ⬜ 🧑 Paystack account, test keys first (live keys only at launch)
-- ⬜ 🧑 Arkesel account, an API key and an approved sender ID
+- ⬜ 🧑 Arkesel account, an API key and an approved sender ID (then add them in Vercel)
 - ⬜ 🧑 A domain name (for the app and the Paystack webhook)
 
 ---
