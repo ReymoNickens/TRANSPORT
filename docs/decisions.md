@@ -85,6 +85,11 @@ can change any of them.
 | A10 | C | A journey's times can change only before sales close; the bus and crew bookings move with them, and a clash is refused | Invariants 11.8 #4 stay true whatever changes |
 | A11 | C | All staff sign in with an authenticator app. High-risk actions also need a reason and an authenticator code entered within the last 5 minutes | Spec 5 (fresh confirmation at the moment of use) and 19.2 |
 | A12 | C | Generation never re-creates a journey for a schedule and date that already had one, even if it was cancelled | Spec 10.4: generation cannot duplicate; a cancelled journey stays as history |
+| A13 | D | A booking that EXPIRED can still become CONFIRMED, but only inside the late-payment procedure (12.4) | Spec 12.4 confirms or re-seats a payment that arrives after the hold ended; the state table in 9.3 lists EXPIRED as final |
+| A14 | D | A booking can go from PENDING straight to CONFIRMED when a success arrives for an attempt after a failure was reported | Out-of-order callbacks must reach the same final state (24.2) |
+| A15 | D | QR token, ticket-link token and boarding code are derived from a server secret (TICKET_TOKEN_SECRET) and the credential id; only hashes are stored | Spec 14.2: the token is never stored, yet the passenger must be able to see the QR again |
+| A16 | D | Each traveller gets one text with their own ticket link and boarding code; the purchaser gets a summary if they are not travelling | Spec 14.1 one ticket per seat, 17.3 rule 6 minimal data |
+| A17 | D | A self-declared student number is accepted (D10) and re-declaring it after expiry re-verifies it | D25 release 1 |
 | A7 | B | Business-rule refusals come from the database with SQLSTATE BR001 and a plain message, shown to managers as is | Spec 8.5: plain-English confirmation and recovery |
 
 ## Change history

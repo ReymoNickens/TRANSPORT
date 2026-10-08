@@ -6,7 +6,7 @@ of every working session.
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · 🧑 needs you (an account, a key or a business decision)
 
-**Now working on:** Phases A, B and C done → next is **Phase D: booking core (Slice 1)**: search, seat holds, Paystack payment, tickets
+**Now working on:** Phase D part 1 (server side) done → next is **Phase D part 2: the passenger screens**
 
 ---
 
@@ -72,15 +72,26 @@ of every working session.
 - ⬜ 🧑 Run one SQL file in the Supabase SQL editor (the bus-assignment function, see chat)
 
 ### Phase D: Booking core (Slice 1)
-- ⬜ Journey search
-- ⬜ Seat map and seat holds (10-minute hold, lock-first transaction)
-- ⬜ Booking state machine
-- ⬜ Payment provider interface, plus a fake provider for tests
-- ⬜ Paystack checkout, webhook inbox, verify call
-- ⬜ Late payment handling: re-seat or automatic refund
-- ⬜ One ticket per seat, with a rotating QR code
-- ⬜ Text messages through the outbox
-- ⬜ Checkpoint: concurrency, replay, late-success and boundary tests pass
+**Part 1, server side ✅ (built and tested; one SQL file waiting for you on Supabase)**
+- ✅ Search between locations, with nearby dates when a day has nothing
+- ✅ Seat map with available, held, taken and blocked seats, and the fares for the chosen stops
+- ✅ Seat holds: all or nothing, 10 minutes (D2), never double-sold (the database refuses it)
+- ✅ Limits: up to 6 seats (D6), 2 unpaid bookings per person (D7), holds per network address
+- ✅ Server-side prices (13.4a) with the student fare (verified, expires per D25) and booking fees
+- ✅ Payment provider interface: Paystack (hosted checkout) and a fake provider for testing
+- ✅ Payment attempts written first, hold extended while paying (D3), callback inbox, verify call before trusting money
+- ✅ Late payments: same seat, else same-class seat, else full automatic refund, with a critical exception (12.4)
+- ✅ Paid twice: the extra payment is refunded automatically
+- ✅ One ticket per seat with a QR code and a 6-character boarding code, never stored in readable form
+- ✅ Text messages through the outbox (one per traveller, retried, never sent twice)
+- ✅ Ledger postings that must balance; refunds can never exceed the payment
+- ✅ 24 integrity tests from spec 24.2 pass (100 people grabbing one seat, a callback replayed 1,000 times, …)
+- ⬜ 🧑 Run the SQL file in the Supabase SQL editor (see chat)
+- ⬜ 🧑 Paystack test secret key, a ticket secret and a job secret in Vercel
+
+**Part 2, passenger screens ⬜ (next)**
+- ⬜ Search, seat map, passenger details, review and pay, waiting screen, ticket with QR
+- ⬜ Trips, guest ticket lookup, the fake checkout page
 
 ### Phase E: Boarding and operations (Slices 2 to 5)
 - ⬜ Slice 2: conductor scanning, manual lookup, duplicate refusal, paper manifest
@@ -119,3 +130,4 @@ of every working session.
 | 2026-10-08 | Stack chosen (Supabase, Vercel, Paystack, Arkesel). Phase A built: database foundations, sign-in, permissions, audit log, tests, CI. |
 | 2026-10-08 | Supabase and Vercel projects created; app live in London. Phase B built: locations, routes, vehicles, seat layouts, fares, concessions, fees, pricing. |
 | 2026-10-08 | Phase C built: schedules, journey generation, bus and crew assignment, snapshots, journey status machine, high-risk confirmation. 105 tests. |
+| 2026-10-08 | Phase D part 1 built: holds, payments (Paystack and fake), late payments, tickets, text messages, ledger. 129 tests. |
