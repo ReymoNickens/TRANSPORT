@@ -9,6 +9,7 @@ import { sendDueMessages } from "@/server/messages";
 import { checkPendingAttempts, retryStoredCallbacks } from "@/server/payments";
 import { checkProcessingRefunds, processDueRefunds } from "@/server/refunds";
 import { importAndCheckDay } from "@/server/finance";
+import { currentAlerts, raiseAlerts } from "@/server/alerts";
 
 /**
  * Background work, called every minute by a scheduler with the CRON_SECRET:
@@ -44,7 +45,14 @@ async function tick(request: Request) {
     log("warn", "jobs.reconciliation_failed", { correlationId, cause: error instanceof Error ? error.message : String(error) });
     return null;
   });
-  log("info", "jobs.tick", { correlationId, expired, ...payments, callbacks, ...refunds, ...messages, raised, settled, reconciled: reconciliation?.day ?? null });
+  const summary = { expired, ...payments, callbacks, ...refunds, ...messages, raised, settled, reconciled: reconciliation?.day ?? null };
+  const alerts = await withOrganisation(ctx, async (tx) => {
+    await tx`select app.record_heartbeat('tick', ${tx.json(summary)})`;
+    const found = await currentAlerts(tx);
+    await raiseAlerts(tx, organisation.id, found);
+    return found;
+  });
+  log(alerts.length ? "warn" : "info", "jobs.tick", { ...summary, correlationId, alerts: alerts.map((a) => a.signal) });
   return Response.json({ data: { expired, ...payments, callbacks, ...refunds, ...messages, raised, settled, reconciled: reconciliation?.day ?? null } });
 }
 

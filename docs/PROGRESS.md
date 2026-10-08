@@ -6,7 +6,7 @@ of every working session.
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · 🧑 needs you (an account, a key or a business decision)
 
-**Now working on:** Phase F part 1 (money) done → next is **Phase F part 2: hardening (security review, load, alerts, backups)**
+**Now working on:** Phase F part 2 (hardening) in progress; a client demo prototype was made in between
 
 ---
 
@@ -160,7 +160,14 @@ of every working session.
 - ✅ Yesterday is checked automatically each morning by the job
 - ✅ Revenue report: booked revenue, earned revenue, net of Paystack fees, refunds owed, by route; proven equal to the ledger; spreadsheet download (audited)
 - ⬜ Check Paystack's settlement field names in test mode (the contract test, spec 24.8)
-- ⬜ Security review, adversarial tests
+**Part 2, hardening 🔄 (in progress)**
+- ✅ Content security policy and secure headers; request size limits
+- ✅ Rate limits shared across servers: booking and ticket-link lookups (guessing locks out after 10 misses), holds, payment starts, conductor scans and lookups, sign-in codes (5 an hour per number)
+- ✅ Operational alerts (spec 22.3) on the dashboard and at /api/health/alerts for an uptime monitor; job heartbeat
+- ✅ Adversarial tests (spec 24.5): tampered prices, foreign seats, other people's bookings, guessing, floods
+- ⬜ Runbooks for each alert, backup restore drill, key rotation rehearsal
+- ⬜ JavaScript size budget in the build, accessibility scan, load test at the peak profile
+- ⬜ Full security review with no open high findings
 - ⬜ Load tests, performance budgets, accessibility pass
 - ⬜ Backup restore drill, alerts
 - ⬜ Usability tests with managers and students

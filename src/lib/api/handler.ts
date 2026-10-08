@@ -133,10 +133,17 @@ function describe(error: unknown) {
 }
 
 /** Parses a JSON body against a schema (spec 20.3). */
+/** No business request is anywhere near this size (spec 19.5 request size limits). */
+export const MAX_BODY_BYTES = 64 * 1024;
+
 export async function readJson<S extends z.ZodType>(request: Request, schema: S): Promise<z.infer<S>> {
+  const declared = Number(request.headers.get("content-length") ?? 0);
+  if (declared > MAX_BODY_BYTES) throw new AppError("payload_too_large");
+  const text = await request.text();
+  if (Buffer.byteLength(text, "utf8") > MAX_BODY_BYTES) throw new AppError("payload_too_large");
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(text);
   } catch {
     throw new AppError("validation_failed", { message: "The request body must be valid JSON." });
   }

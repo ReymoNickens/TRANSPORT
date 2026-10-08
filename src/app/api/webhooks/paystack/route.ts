@@ -20,6 +20,8 @@ export async function POST(request: Request) {
     return new Response(null, { status: 403 });
   }
   const rawBody = await request.text();
+  // Provider events are small; anything larger is not one (19.5).
+  if (rawBody.length > 256 * 1024) return new Response(null, { status: 413 });
   try {
     const organisation = await currentOrganisation();
     const result = await receiveCallback({ organisationId: organisation.id, correlationId }, paymentProvider(), rawBody, request.headers);

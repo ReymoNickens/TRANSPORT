@@ -1,5 +1,6 @@
 import { idempotent } from "@/lib/api/idempotency";
 import { idParams, opsRoute } from "@/lib/api/ops";
+import { checkLimit } from "@/lib/api/rate-limit";
 import { requireJourneyAccess, scanInput, scanTicket } from "@/server/boarding";
 
 /**
@@ -8,6 +9,7 @@ import { requireJourneyAccess, scanInput, scanTicket } from "@/server/boarding";
  * retried safely and returns the original result (14.3a).
  */
 export const POST = opsRoute({ permission: "ticket.scan", params: idParams, body: scanInput }, async ({ tx, actor, params, body, ctx }) => {
+  await checkLimit({ organisationId: actor.organisationId, correlationId: ctx.correlationId }, "scan", actor.userId);
   await requireJourneyAccess(tx, actor, params.id);
   if (!body.confirm) return scanTicket(tx, params.id, body);
   const { result } = await idempotent(

@@ -1,9 +1,11 @@
 import { idempotent } from "@/lib/api/idempotency";
 import { idParams, opsRoute } from "@/lib/api/ops";
+import { checkLimit } from "@/lib/api/rate-limit";
 import { boardInput, boardManually, requireJourneyAccess } from "@/server/boarding";
 
 /** Manual boarding after a lookup (14.4). Confirming needs an Idempotency-Key. */
 export const POST = opsRoute({ permission: "ticket.board.manual", params: idParams, body: boardInput }, async ({ tx, actor, params, body, ctx }) => {
+  await checkLimit({ organisationId: actor.organisationId, correlationId: ctx.correlationId }, "scan", actor.userId);
   await requireJourneyAccess(tx, actor, params.id);
   if (!body.confirm) return boardManually(tx, params.id, body);
   const { result } = await idempotent(

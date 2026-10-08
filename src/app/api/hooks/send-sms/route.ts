@@ -4,6 +4,9 @@ import { log } from "@/lib/api/log";
 import { env } from "@/lib/env";
 import { normaliseGhanaPhone, maskPhone } from "@/lib/phone";
 import { smsProvider } from "@/providers/sms";
+import { db } from "@/lib/db";
+import { createHash } from "node:crypto";
+import { overLimitAfter } from "@/lib/api/rate-limit";
 import { SmsSendError } from "@/providers/sms/types";
 
 /**
@@ -24,6 +27,7 @@ function hookError(status: number, message: string) {
 export async function POST(request: Request) {
   const correlationId = crypto.randomUUID();
   const raw = await request.text();
+  if (raw.length > 16 * 1024) return hookError(413, "Request too large");
 
   const secret = env().SEND_SMS_HOOK_SECRET;
   if (!secret) {
@@ -45,6 +49,13 @@ export async function POST(request: Request) {
   if (!phone) {
     log("warn", "sms_hook.unsupported_number", { correlationId });
     return hookError(400, "Only Ghana mobile numbers are supported");
+  }
+
+  // At most 5 codes an hour to one number (19.1). The key is a hash, never the number itself.
+  const numberKey = createHash("sha256").update(phone).digest("hex").slice(0, 32);
+  if (await overLimitAfter(db(), "signInCode", numberKey).catch(() => false)) {
+    log("warn", "sms_hook.rate_limited", { correlationId, to: maskPhone(phone) });
+    return hookError(429, "Too many codes requested for this number. Please wait and try again later.");
   }
 
   try {
