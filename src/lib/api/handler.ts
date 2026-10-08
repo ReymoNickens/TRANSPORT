@@ -89,6 +89,9 @@ const uniqueMessages: Record<string, string> = {
   seats_layout_id_row_number_column_number_key: "Two seats are in the same place.",
   fare_rules_template_id_origin_stop_id_destination_stop_id_seat_type_key: "There are two prices for the same trip and seat type.",
   concession_types_organisation_id_code_key: "A concession with this code already exists.",
+  schedules_name_per_organisation: "A schedule with this name already exists.",
+  schedule_exceptions_schedule_id_service_date_key: "This schedule already has an exception on that date.",
+  journey_staff_once_per_journey: "This person is already on the journey's crew.",
 };
 
 /**
@@ -104,6 +107,11 @@ function fromDatabaseError(error: unknown): AppError | null {
     case "23505":
       return new AppError("already_exists", {
         message: (e.constraint_name && uniqueMessages[e.constraint_name]) || undefined,
+        cause: error,
+      });
+    case "23P01":
+      return new AppError("rule_violation", {
+        message: "This clashes with another journey for the same bus or person.",
         cause: error,
       });
     case "23503":

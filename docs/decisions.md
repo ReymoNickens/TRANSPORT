@@ -80,6 +80,11 @@ can change any of them.
 | A4 | B | Concession discounts are rounded half up per seat; fees are summed exactly and the booking total is rounded once | Spec 13.4a rounds the total once; a per-seat concession must be a whole pesewa to be shown before payment |
 | A5 | B | Percentages (concessions, percent fees) are stored in basis points (1000 = 10%) | Integer arithmetic only; no floating point on money |
 | A6 | B | Vehicle capacity is the physical seat count; a published layout may not offer more bookable seats | Keeps the fleet record and the seat map consistent |
+| A8 | C | A schedule does not pin a fare table. A journey takes the route's live fare table when it goes on sale | Prices change by publishing a new fare table (A1); a pinned table would be archived and stale |
+| A9 | C | A journey's seat map is copied from its bus's published layout when the bus is assigned, while the journey is a draft. Once on sale, the bus changes only through the vehicle change procedure (Slice 5) | Spec 10.4: seat snapshot at creation; 15.1 governs changes after sale |
+| A10 | C | A journey's times can change only before sales close; the bus and crew bookings move with them, and a clash is refused | Invariants 11.8 #4 stay true whatever changes |
+| A11 | C | All staff sign in with an authenticator app. High-risk actions also need a reason and an authenticator code entered within the last 5 minutes | Spec 5 (fresh confirmation at the moment of use) and 19.2 |
+| A12 | C | Generation never re-creates a journey for a schedule and date that already had one, even if it was cancelled | Spec 10.4: generation cannot duplicate; a cancelled journey stays as history |
 | A7 | B | Business-rule refusals come from the database with SQLSTATE BR001 and a plain message, shown to managers as is | Spec 8.5: plain-English confirmation and recovery |
 
 ## Change history

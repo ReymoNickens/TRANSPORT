@@ -7,6 +7,7 @@ export const errorCatalogue = {
   unauthenticated: { status: 401, message: "Please sign in to continue." },
   second_factor_required: { status: 403, message: "Confirm it's you with your authenticator app to continue." },
   forbidden: { status: 403, message: "You don't have permission to do this." },
+  reconfirmation_required: { status: 403, message: "This is a sensitive action. Enter the code from your authenticator app again to confirm it's you." },
   not_found: { status: 404, message: "We couldn't find what you were looking for." },
   conflict: { status: 409, message: "This was changed by someone else. Refresh and try again." },
   already_exists: { status: 409, message: "Something with these details already exists." },

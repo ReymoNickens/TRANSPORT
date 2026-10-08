@@ -19,7 +19,27 @@ export type Actor = {
   secondFactorRequired: boolean;
   /** The session's assurance level from Supabase Auth: aal2 means a second factor was used. */
   assuranceLevel: "aal1" | "aal2";
+  /** When the second factor was last entered in this session; null if never. */
+  secondFactorAt: Date | null;
 };
+
+/** High-risk actions need the second factor entered within this window (spec 5, 19.2). */
+export const RECONFIRM_WINDOW_MS = 5 * 60 * 1000;
+
+/**
+ * High-risk permissions need a fresh confirmation at the moment of use and a
+ * reason, which is written to the audit log (spec 5).
+ */
+export function requireFreshConfirmation(actor: Actor, reason: string | undefined, now = new Date()): string {
+  const trimmed = reason?.trim();
+  if (!trimmed || trimmed.length < 5) {
+    throw new AppError("validation_failed", { message: "Give a reason for this action (at least 5 characters)." });
+  }
+  if (!actor.secondFactorAt || now.getTime() - actor.secondFactorAt.getTime() > RECONFIRM_WINDOW_MS) {
+    throw new AppError("reconfirmation_required");
+  }
+  return trimmed;
+}
 
 export type ScopeRef = { type: "station" | "journey"; id: string };
 

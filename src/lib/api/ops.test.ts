@@ -27,9 +27,23 @@ function staff(codes: string[], overrides: Partial<Actor> = {}): Actor {
     grants: codes.map((code) => ({ code, scopeType: "organisation", scopeId: null, highRisk: false })),
     secondFactorRequired: false,
     assuranceLevel: "aal2",
+    secondFactorAt: null,
     ...overrides,
   };
 }
+
+const { z } = await import("zod");
+const cancel = opsRoute(
+  { permission: "journey.cancel", body: z.object({ reason: z.string().optional() }) },
+  async ({ reason }) => ({ reason }),
+);
+const highRiskGrant = (overrides: Partial<Actor> = {}) => {
+  const a = staff(["journey.cancel"], overrides);
+  a.grants[0].highRisk = true;
+  return a;
+};
+const callCancel = (body: unknown) =>
+  cancel(new Request("https://example.test/api/ops/cancel", { method: "POST", body: JSON.stringify(body) }));
 
 const handler = opsRoute({ permission: "fleet.manage", params: idParams }, async ({ params }) => ({ id: params.id }));
 const call = (id = "0190a5c4-0000-7000-8000-000000000001") =>
@@ -74,5 +88,21 @@ describe("opsRoute", () => {
     const response = await call();
     expect(response.status).toBe(200);
     expect(state.ranWith).toMatchObject({ organisationId: "o1", actorUserId: "u1", sourceAddress: "41.66.1.2" });
+  });
+});
+
+describe("opsRoute for a high-risk permission", () => {
+  it("asks for a fresh authenticator code when the last one is old", async () => {
+    state.actor = highRiskGrant({ secondFactorAt: new Date(Date.now() - 60 * 60 * 1000) });
+    const response = await callCancel({ reason: "Bus broke down" });
+    expect((await response.json()).error.code).toBe("reconfirmation_required");
+  });
+
+  it("needs a reason, and records it for the audit log", async () => {
+    state.actor = highRiskGrant({ secondFactorAt: new Date() });
+    expect((await (await callCancel({})).json()).error.code).toBe("validation_failed");
+    const ok = await callCancel({ reason: "Bus broke down" });
+    expect(ok.status).toBe(200);
+    expect(state.ranWith).toMatchObject({ reason: "Bus broke down" });
   });
 });

@@ -48,6 +48,10 @@ tests/db/           database integrity tests against a real Postgres
 - **Tables** live in schema `app` (not exposed by Supabase's REST API). Follow the conventions at the top of
   `supabase/migrations/20261008065500_foundations.sql`: uuid v7 ids, bigint pesewas plus currency, timestamptz,
   `organisation_id` with composite foreign keys, the `org_boundary` policy, grants to `app_runtime`, audit triggers.
+- **Applying migrations to Supabase with the connector**: `apply_migration` records its own version; rename the
+  local file to that version afterwards. The connector asks for confirmation on SQL containing `delete from`
+  (even inside a function body) and that prompt cannot be answered here, so it times out. Put such SQL in its own
+  idempotent migration (`create or replace`) and ask the owner to run it in the Supabase SQL editor.
 - **New migrations**: a new file `supabase/migrations/<yyyymmddhhmmss>_<name>.sql`. Never edit a migration that has been pushed. Every function sets `search_path = ''` and schema-qualifies names (Supabase advisor 0011). Run the Supabase security advisor after each migration.
 - **Business rules in the database** raise `app.fail('plain message')` (SQLSTATE BR001). The API passes the
   message through as `rule_violation`, so write it for a manager. Unique-index names get a plain message in

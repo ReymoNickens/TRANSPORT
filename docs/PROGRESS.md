@@ -6,7 +6,7 @@ of every working session.
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · 🧑 needs you (an account, a key or a business decision)
 
-**Now working on:** Phases A and B done → next is **Phase C: scheduling** (schedules, journey generation, seat and fare snapshots, vehicle assignment)
+**Now working on:** Phases A, B and C done → next is **Phase D: booking core (Slice 1)**: search, seat holds, Paystack payment, tickets
 
 ---
 
@@ -58,12 +58,18 @@ of every working session.
 - ✅ Tests: 86 passing (pricing, seat maps, permissions, and 20 database integrity tests for this phase)
 - ⬜ Manager screens for these (they come with Slice 3, the guided workflows)
 
-### Phase C: Scheduling
-- ⬜ Schedules and exceptions
-- ⬜ Nightly journey generation, 30 days ahead (D23)
-- ⬜ Seat and fare snapshots per journey
-- ⬜ Vehicle assignment with the 60-minute turnaround buffer
-- ⬜ Checkpoint: journeys generate once, snapshots never change, assignments can't overlap
+### Phase C: Scheduling ✅ (built and tested; one step waiting for you on Supabase)
+- ✅ Schedules with versions (an edit is a new version) and exceptions (holidays, moved or extra runs)
+- ✅ Nightly journey generation, 30 days ahead, at 02:10 (D23); also runnable on demand; never duplicates
+- ✅ A journey goes on sale only with a bus, a seat map copied from that bus and fares copied from the live fare table
+- ✅ Seat and fare snapshots never change once on sale (only blocking a broken seat is allowed)
+- ✅ Bus assignment with the 60-minute turnaround (D16): the database refuses double-booking a bus
+- ✅ Crew (driver, conductor): nobody can be on two overlapping journeys
+- ✅ Journey status machine (DRAFT → SCHEDULED → … → COMPLETED / CANCELLED), every move recorded with who, when and why
+- ✅ Changing a schedule shows the effect first, then moves unbooked journeys (spec 23.1)
+- ✅ High-risk actions (for example cancelling a journey) need a reason and a fresh authenticator code
+- ✅ Checkpoint passed: journeys generate once, snapshots hold, assignments cannot overlap (14 tests)
+- ⬜ 🧑 Run one SQL file in the Supabase SQL editor (the bus-assignment function, see chat)
 
 ### Phase D: Booking core (Slice 1)
 - ⬜ Journey search
@@ -112,3 +118,4 @@ of every working session.
 |---|---|
 | 2026-10-08 | Stack chosen (Supabase, Vercel, Paystack, Arkesel). Phase A built: database foundations, sign-in, permissions, audit log, tests, CI. |
 | 2026-10-08 | Supabase and Vercel projects created; app live in London. Phase B built: locations, routes, vehicles, seat layouts, fares, concessions, fees, pricing. |
+| 2026-10-08 | Phase C built: schedules, journey generation, bus and crew assignment, snapshots, journey status machine, high-risk confirmation. 105 tests. |

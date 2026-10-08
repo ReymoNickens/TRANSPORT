@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { requireActor } from "@/lib/auth/actor";
-import { requirePermission, type Actor } from "@/lib/auth/permissions";
+import { isHighRisk, requireFreshConfirmation, requirePermission, type Actor } from "@/lib/auth/permissions";
 import { withOrganisation, type Tx } from "@/lib/db";
 import { AppError } from "./errors";
 import { apiRoute, readJson, type ApiContext } from "./handler";
@@ -15,6 +15,8 @@ export type OpsArgs<B, Q, P> = {
   query: Q;
   params: P;
   ctx: ApiContext;
+  /** The reason given for a high-risk action (also written to the audit log). */
+  reason: string | undefined;
 };
 
 /** Route params are uuids; anything else is simply not found. */
@@ -24,6 +26,8 @@ export const idParams = z.object({ id: z.uuid() });
  * A staff business operation (spec 20.5): signed-in staff, a named
  * permission checked on the server, validated input, and one transaction
  * scoped to the actor's organisation with the actor recorded for audit.
+ * A high-risk permission also needs a reason in the body and a fresh
+ * second-factor confirmation (spec 5).
  */
 export function opsRoute<BS extends Schema | undefined = undefined, QS extends Schema | undefined = undefined, PS extends Schema | undefined = undefined>(
   options: { permission: string; body?: BS; query?: QS; params?: PS; status?: number },
@@ -44,6 +48,9 @@ export function opsRoute<BS extends Schema | undefined = undefined, QS extends S
       ? options.query.parse(Object.fromEntries(new URL(ctx.request.url).searchParams))
       : undefined) as Out<QS>;
     const body = (options.body ? await readJson(ctx.request, options.body) : undefined) as Out<BS>;
+    const reason = isHighRisk(actor, options.permission)
+      ? requireFreshConfirmation(actor, (body as { reason?: string } | undefined)?.reason)
+      : undefined;
 
     const data = await withOrganisation(
       {
@@ -52,8 +59,9 @@ export function opsRoute<BS extends Schema | undefined = undefined, QS extends S
         correlationId: ctx.correlationId,
         sourceAddress: clientAddress(ctx.request),
         device: ctx.request.headers.get("user-agent"),
+        reason,
       },
-      (tx) => run({ tx, actor, body, query, params, ctx }),
+      (tx) => run({ tx, actor, body, query, params, ctx, reason }),
     );
     return { data, status: options.status };
   });

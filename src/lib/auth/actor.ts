@@ -5,7 +5,13 @@ import { currentOrganisation } from "@/lib/organisation";
 import type { Actor, Grant } from "./permissions";
 import { supabaseServer } from "./supabase";
 
-type Identity = { authUserId: string; phone: string | null; assuranceLevel: "aal1" | "aal2" };
+type Identity = {
+  authUserId: string;
+  phone: string | null;
+  assuranceLevel: "aal1" | "aal2";
+  /** When an authenticator-app code was last entered; null if never in this session. */
+  secondFactorAt?: Date | null;
+};
 
 /** The verified identity from the Supabase session, or null when signed out. */
 export async function currentIdentity(): Promise<Identity | null> {
@@ -19,7 +25,19 @@ export async function currentIdentity(): Promise<Identity | null> {
     // Supabase stores phone numbers without the leading +.
     phone: claims.phone ? `+${String(claims.phone).replace(/^\+/, "")}` : null,
     assuranceLevel: claims.aal === "aal2" ? "aal2" : "aal1",
+    secondFactorAt: lastSecondFactor(claims.amr),
   };
+}
+
+/** The most recent authenticator-app entry in the token's authentication methods. */
+export function lastSecondFactor(amr: unknown): Date | null {
+  if (!Array.isArray(amr)) return null;
+  const times = amr
+    .filter((entry): entry is { method: string; timestamp: number } =>
+      typeof entry === "object" && entry !== null && (entry as { method?: unknown }).method === "totp")
+    .map((entry) => entry.timestamp)
+    .filter((t) => typeof t === "number");
+  return times.length ? new Date(Math.max(...times) * 1000) : null;
 }
 
 /**
@@ -68,5 +86,6 @@ export async function loadActor(tx: Tx, organisationId: string, identity: Identi
     })),
     secondFactorRequired: rows.some((row) => row.requiresSecondFactor),
     assuranceLevel: identity.assuranceLevel,
+    secondFactorAt: identity.secondFactorAt ?? null,
   };
 }

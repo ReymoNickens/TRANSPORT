@@ -171,3 +171,108 @@ export type FeeRuleRow = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+// ---------------------------------------------------------------------------
+// Phase C: scheduling
+// ---------------------------------------------------------------------------
+
+export type ScheduleStatus = "active" | "paused" | "archived";
+
+export type ScheduleVersion = {
+  version: number;
+  departureTime: string;
+  daysOfWeek: number[];
+  defaultVehicleId: string | null;
+  defaultVehicleRegistration: string | null;
+  createdAt: Date;
+};
+
+export type ScheduleException = {
+  id: string;
+  serviceDate: string;
+  kind: "skip" | "move" | "extra";
+  departureTime: string | null;
+  reason: string;
+};
+
+export type ScheduleSummary = {
+  id: string;
+  name: string;
+  status: ScheduleStatus;
+  routeId: string;
+  routeName: string;
+  currentVersion: number;
+  departureTime: string;
+  daysOfWeek: number[];
+  defaultVehicleRegistration: string | null;
+};
+
+export type Schedule = ScheduleSummary & {
+  bookingOpenDaysBefore: number | null;
+  createdAt: Date;
+  versions: ScheduleVersion[];
+  exceptions: ScheduleException[];
+  upcomingJourneys: number;
+};
+
+export type JourneyState = "DRAFT" | "SCHEDULED" | "SALES_CLOSED" | "BOARDING" | "DEPARTED" | "COMPLETED" | "CANCELLED";
+
+export type JourneySummary = {
+  id: string;
+  routeId: string;
+  routeName: string;
+  scheduleId: string | null;
+  serviceDate: string;
+  scheduledDepartureAt: Date;
+  scheduledArrivalAt: Date;
+  state: JourneyState;
+  vehicleRegistration: string | null;
+  bookableSeats: number;
+  /** Derived: a draft without a bus (D23 "needs a bus"). */
+  needsBus: boolean;
+  /** Derived: a draft whose route has no live fare table. */
+  needsFares: boolean;
+};
+
+export type JourneyEvent = {
+  eventType: string;
+  fromState: string | null;
+  toState: string | null;
+  delayMinutes: number | null;
+  notes: string | null;
+  recordedByName: string | null;
+  occurredAt: Date;
+};
+
+export type JourneyStaffMember = {
+  id: string;
+  userId: string;
+  fullName: string | null;
+  staffRole: "driver" | "conductor";
+  assignedAt: Date;
+};
+
+export type JourneySeat = {
+  id: string;
+  seatNumber: string;
+  seatType: "standard" | "premium" | "accessible";
+  rowNumber: number;
+  columnNumber: number;
+  position: "window" | "aisle" | "middle" | null;
+  state: "BOOKABLE" | "BLOCKED";
+};
+
+export type Journey = JourneySummary & {
+  scheduleVersion: number | null;
+  actualDepartureAt: Date | null;
+  actualArrivalAt: Date | null;
+  delayMinutes: number;
+  bookingOpensAt: Date;
+  cancelledAt: Date | null;
+  cancellationReason: string | null;
+  vehicleId: string | null;
+  fareCount: number;
+  seats: JourneySeat[];
+  staff: JourneyStaffMember[];
+  events: JourneyEvent[];
+};
