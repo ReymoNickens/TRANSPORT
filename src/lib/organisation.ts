@@ -10,15 +10,12 @@ let cached: { slug: string; organisation: Organisation } | undefined;
 /**
  * The organisation this deployment serves. Release 1 runs one organisation,
  * chosen by ORGANISATION_SLUG. This lookup runs before row-level security
- * can apply, because it is what decides the organisation.
+ * can apply, because it is what decides the organisation, so it goes
+ * through a narrow database function rather than the table.
  */
 export async function currentOrganisation(sql: Sql = db(), slug = env().ORGANISATION_SLUG): Promise<Organisation> {
   if (cached?.slug === slug) return cached.organisation;
-  const [row] = await sql<Organisation[]>`
-    select id, name, slug, timezone, currency
-    from app.organisations
-    where slug = ${slug} and status = 'active'
-  `;
+  const [row] = await sql<Organisation[]>`select * from app.organisation_by_slug(${slug})`;
   if (!row) throw new AppError("organisation_unavailable");
   cached = { slug, organisation: row };
   return row;

@@ -45,9 +45,9 @@ tests/db/           database integrity tests against a real Postgres
   It runs the transaction as role `app_runtime` with the organisation set, so row-level security enforces the
   organisation boundary. `db()` directly is only for pre-organisation platform lookups.
 - **Tables** live in schema `app` (not exposed by Supabase's REST API). Follow the conventions at the top of
-  `supabase/migrations/20261008000001_foundations.sql`: uuid v7 ids, bigint pesewas plus currency, timestamptz,
+  `supabase/migrations/20261008065500_foundations.sql`: uuid v7 ids, bigint pesewas plus currency, timestamptz,
   `organisation_id` with composite foreign keys, the `org_boundary` policy, grants to `app_runtime`, audit triggers.
-- **New migrations**: a new file `supabase/migrations/<yyyymmddhhmmss>_<name>.sql`. Never edit a migration that has been pushed.
+- **New migrations**: a new file `supabase/migrations/<yyyymmddhhmmss>_<name>.sql`. Never edit a migration that has been pushed. Every function sets `search_path = ''` and schema-qualifies names (Supabase advisor 0011). Run the Supabase security advisor after each migration.
 - **State changes** use conditional updates (`where id = ? and state = <expected>`) and check the row count.
 - **Endpoints** use `apiRoute` from `src/lib/api/handler.ts`: `{ data }` or `{ error: { code, message, correlationId } }`.
   Error codes come from `src/lib/api/errors.ts`; add new ones there. Validate every body with zod via `readJson`.

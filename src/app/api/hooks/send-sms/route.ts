@@ -25,9 +25,15 @@ export async function POST(request: Request) {
   const correlationId = crypto.randomUUID();
   const raw = await request.text();
 
+  const secret = env().SEND_SMS_HOOK_SECRET;
+  if (!secret) {
+    log("error", "sms_hook.not_configured", { correlationId });
+    return hookError(503, "Text messages are not set up yet");
+  }
+
   let payload: z.infer<typeof payloadSchema>;
   try {
-    const webhook = new Webhook(env().SEND_SMS_HOOK_SECRET.replace("v1,whsec_", ""));
+    const webhook = new Webhook(secret.replace("v1,whsec_", ""));
     const verified = webhook.verify(raw, Object.fromEntries(request.headers));
     payload = payloadSchema.parse(verified);
   } catch {

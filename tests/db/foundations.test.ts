@@ -59,6 +59,17 @@ describe("organisation boundary (spec 11.8 #13)", () => {
     expect(rows[0].n).toBe(0);
   });
 
+  it("lets the runtime role find an organisation by slug, and nothing more, before the organisation is set", async () => {
+    const [{ slug }] = await sql`select slug from app.organisations where id = ${orgA}`;
+    const rows = await sql.begin(async (tx) => {
+      await tx`set local role app_runtime`;
+      return tx`select * from app.organisation_by_slug(${slug})`;
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].id).toBe(orgA);
+    expect(Object.keys(rows[0]).sort()).toEqual(["currency", "id", "name", "slug", "timezone"]);
+  });
+
   it("refuses to write a row into another organisation", async () => {
     const authUserId = await createAuthUser(sql);
     await expect(
