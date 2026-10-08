@@ -1,5 +1,7 @@
 import {
   PaymentProviderError,
+  type ProviderSettlement,
+  type ProviderTransaction,
   type PaymentCheck,
   type PaymentProvider,
   type RefundResult,
@@ -28,6 +30,10 @@ export class FakePaymentProvider implements PaymentProvider {
   refundBehaviour: "processed" | "pending" | "refused" | "unreachable" = "processed";
   /** What a later check of a pending refund reports. */
   refundCheckResult: RefundResult["status"] = "processed";
+
+  /** The fake's own records, for reconciliation tests: set them to what "the provider" says. */
+  transactions: ProviderTransaction[] = [];
+  settlements: (ProviderSettlement & { transactionReferences: string[] })[] = [];
 
   constructor(private readonly baseUrl: string) {}
 
@@ -58,6 +64,16 @@ export class FakePaymentProvider implements PaymentProvider {
 
   async checkRefund(providerReference: string): Promise<RefundResult> {
     return { providerReference, status: this.refundCheckResult };
+  }
+
+  async listTransactions(from: Date, to: Date): Promise<ProviderTransaction[]> {
+    return this.transactions.filter((t) => t.paidAt && t.paidAt >= from && t.paidAt < to);
+  }
+
+  async listSettlements(from: Date, to: Date) {
+    const fromDay = from.toISOString().slice(0, 10);
+    const toDay = to.toISOString().slice(0, 10);
+    return this.settlements.filter((s) => s.settledOn >= fromDay && s.settledOn < toDay);
   }
 }
 

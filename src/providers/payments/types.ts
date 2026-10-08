@@ -3,8 +3,7 @@
  * this; Paystack details stay in paystack.ts. A provider's own fields never
  * leak into booking code.
  *
- * The fifth operation of 13.2, the settlement report, arrives with
- * reconciliation in phase F.
+ * The settlement report of 13.2 is listTransactions and listSettlements.
  */
 
 /** Our normalised view of a provider's status (13.2a mapping). */
@@ -47,6 +46,34 @@ export type VerifiedCallback = {
 
 export type RefundResult = { providerReference: string | null; status: "pending" | "processed" | "failed" };
 
+/** One of the provider's own transaction records, for daily reconciliation (18.4a). */
+export type ProviderTransaction = {
+  /** The reference we sent: our payment attempt id. */
+  reference: string;
+  status: PaymentStatus;
+  amountPesewas: number;
+  currency: string;
+  feePesewas: number;
+  channel: string | null;
+  paidAt: Date | null;
+  /** The provider's settlement this transaction was paid out in, if any. */
+  settlementId: string | null;
+  raw: unknown;
+};
+
+/** A payout from the provider to the organisation's bank (18.4a step 5). */
+export type ProviderSettlement = {
+  id: string;
+  /** YYYY-MM-DD, the day the money reached the bank. */
+  settledOn: string;
+  currency: string;
+  grossPesewas: number;
+  feesPesewas: number;
+  refundsPesewas: number;
+  netPesewas: number;
+  raw: unknown;
+};
+
 export interface PaymentProvider {
   readonly name: "fake" | "paystack";
   startPayment(input: StartPaymentInput): Promise<StartPaymentResult>;
@@ -58,6 +85,10 @@ export interface PaymentProvider {
   refund(reference: string, amountPesewas: number): Promise<RefundResult>;
   /** Asks the provider how a refund it accepted is going. */
   checkRefund(providerReference: string): Promise<RefundResult>;
+  /** The provider's transactions between two times (the settlement report of 13.2). */
+  listTransactions(from: Date, to: Date): Promise<ProviderTransaction[]>;
+  /** The provider's settlements paid between two times, with the transactions each one paid out. */
+  listSettlements(from: Date, to: Date): Promise<(ProviderSettlement & { transactionReferences: string[] })[]>;
 }
 
 /** A call to the provider failed. Retryable failures are never treated as a failed payment (13.2a rule 5). */

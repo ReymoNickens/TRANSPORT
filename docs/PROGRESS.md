@@ -6,7 +6,7 @@ of every working session.
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · 🧑 needs you (an account, a key or a business decision)
 
-**Now working on:** Phase E done → next is **Phase F: money and hardening (Slice 6)**
+**Now working on:** Phase F part 1 (money) done → next is **Phase F part 2: hardening (security review, load, alerts, backups)**
 
 ---
 
@@ -151,9 +151,15 @@ of every working session.
 - ⬜ Breakdown during a trip (recovery bus with passengers on board, spec 15.4)
 
 ### Phase F: Money and hardening (Slice 6)
-- ⬜ Ledger (chart of accounts, postings that sum to zero)
-- ⬜ Daily reconciliation against Paystack settlements, with Finance sign-off
-- ⬜ Reports
+**Part 1, money ✅ (built and tested; in the SQL file waiting for you)**
+- ✅ Ledger with the fixed chart of accounts; every posting sums to zero; nothing can be edited or deleted
+- ✅ Revenue is earned when a journey completes (fares and booking fees separately); money kept from cancellations is earned too
+- ✅ Paystack's transactions and settlements imported each day and matched with our payments; every difference listed in plain words (paid at Paystack but no booking, paid here but not at Paystack, amounts or fees that differ, settlements that do not add up)
+- ✅ Settlements posted to the bank in the ledger, once
+- ✅ Finance resolves each difference with a note and signs the day off; a signed-off day cannot change
+- ✅ Yesterday is checked automatically each morning by the job
+- ✅ Revenue report: booked revenue, earned revenue, net of Paystack fees, refunds owed, by route; proven equal to the ledger; spreadsheet download (audited)
+- ⬜ Check Paystack's settlement field names in test mode (the contract test, spec 24.8)
 - ⬜ Security review, adversarial tests
 - ⬜ Load tests, performance budgets, accessibility pass
 - ⬜ Backup restore drill, alerts
@@ -188,3 +194,4 @@ of every working session.
 | 2026-10-08 | Phase E slice 3 part 2: route, bus, fare and schedule screens; booked departures protected from schedule changes. 164 tests. |
 | 2026-10-08 | Phase E slice 4: cancellations and refunds (policy, passenger and staff cancellation, journey cancellation, refund processing, Finance queue). 179 tests. |
 | 2026-10-08 | Phase E slice 5: changing the bus after seats are sold, with deterministic seat matching. 186 tests. |
+| 2026-10-08 | Phase F part 1: earned revenue, Paystack reconciliation with sign-off, revenue report proven against the ledger. 194 tests. |

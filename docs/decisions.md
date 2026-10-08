@@ -110,6 +110,10 @@ can change any of them.
 | A36 | E | A seat the manager picks of a different type keeps the passenger's sold seat type and price on the booking; if the new seat type's fare is lower, the difference is refunded automatically | Spec 15.1 "never charged more" |
 | A37 | E | The bus-change preview carries a fingerprint of the plan; applying with a different plan is refused, so the change is always the one the manager saw | Spec 15.1 rule 5 |
 | A38 | E | The bus of a journey cannot be changed here once anyone has boarded (the breakdown procedure, 15.4, comes later) | Spec 15.4 |
+| A39 | F | Revenue is recognised when a journey reaches COMPLETED: each booking's DEFERRED_FARES balance moves to FEE_REVENUE (booking-fee shares of seats that were not cancelled) and FARE_REVENUE (the rest). On a cancelled journey, amounts kept under the cancellation policy are recognised as fare revenue | Spec 18.2, 18.3a |
+| A40 | F | Booked revenue for a period = payments received in it less refunds approved in it (not turned down); refund liability = REFUNDS_PAYABLE balance at the period end, which includes failed refunds still owed | Spec 18.2, D18 |
+| A41 | F | A day is reconciled in Accra time (UTC); settlements are matched by the transactions Paystack lists in each one; tolerance is zero pesewas | Spec 18.4, 18.4a |
+| A42 | F | A difference that disappears when the day is checked again resolves itself with a note saying so; anything else needs a person's note before the day can be signed off; a day can be signed off only after it has ended | Spec 18.4 steps 4 and 5 |
 | A28 | E | Saving the route guide makes the route and its fare table live together; changing fares later copies the live table, edits the copy and makes it live after confirmation | Spec 8.3, 8.4 "Change a fare on a journey already on sale"; decision A1 versioning |
 | A7 | B | Business-rule refusals come from the database with SQLSTATE BR001 and a plain message, shown to managers as is | Spec 8.5: plain-English confirmation and recovery |
 

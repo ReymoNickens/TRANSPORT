@@ -1,5 +1,7 @@
 import {
   PaymentProviderError,
+  type ProviderSettlement,
+  type ProviderTransaction,
   type PaymentCheck,
   type PaymentProvider,
   type PaymentStatus,
@@ -83,6 +85,61 @@ export class PaystackProvider implements PaymentProvider {
   async checkRefund(providerReference: string): Promise<RefundResult> {
     const data = await this.call<{ status?: string; id?: number }>("GET", `/refund/${encodeURIComponent(providerReference)}`);
     return { providerReference, status: data.status === "processed" ? "processed" : data.status === "failed" ? "failed" : "pending" };
+  }
+
+  /**
+   * Paystack's transactions for a period, page by page. Field names follow
+   * Paystack's API reference; the contract test in test mode confirms them (24.8).
+   */
+  async listTransactions(from: Date, to: Date): Promise<ProviderTransaction[]> {
+    type Row = { reference: string; status: string; amount: number; currency: string; fees: number | null; channel: string | null; paid_at: string | null };
+    const rows = await this.pages<Row>("/transaction", { from: from.toISOString(), to: to.toISOString() });
+    return rows.map((r) => ({
+      reference: r.reference,
+      status: mapStatus(r.status),
+      amountPesewas: r.amount,
+      currency: r.currency,
+      feePesewas: r.fees ?? 0,
+      channel: r.channel ?? null,
+      paidAt: r.paid_at ? new Date(r.paid_at) : null,
+      settlementId: null,
+      raw: r,
+    }));
+  }
+
+  async listSettlements(from: Date, to: Date): Promise<(ProviderSettlement & { transactionReferences: string[] })[]> {
+    type Row = { id: number; settlement_date?: string; settled_date?: string; currency: string; total_amount?: number; total_processed?: number; total_fees?: number; deductions?: number; effective_amount?: number };
+    const rows = await this.pages<Row>("/settlement", { from: from.toISOString(), to: to.toISOString() });
+    const settlements = [];
+    for (const r of rows) {
+      const transactions = await this.pages<{ reference: string }>(`/settlement/${r.id}/transactions`, {});
+      const gross = r.total_processed ?? r.total_amount ?? 0;
+      const fees = r.total_fees ?? 0;
+      const refunds = r.deductions ?? 0;
+      settlements.push({
+        id: String(r.id),
+        settledOn: (r.settlement_date ?? r.settled_date ?? from.toISOString()).slice(0, 10),
+        currency: r.currency,
+        grossPesewas: gross,
+        feesPesewas: fees,
+        refundsPesewas: refunds,
+        netPesewas: r.effective_amount ?? gross - fees - refunds,
+        raw: r,
+        transactionReferences: transactions.map((t) => t.reference),
+      });
+    }
+    return settlements;
+  }
+
+  private async pages<T>(path: string, query: Record<string, string>): Promise<T[]> {
+    const all: T[] = [];
+    for (let page = 1; page <= 50; page++) {
+      const search = new URLSearchParams({ ...query, perPage: "100", page: String(page) });
+      const rows = await this.call<T[]>("GET", `${path}?${search}`);
+      all.push(...rows);
+      if (rows.length < 100) break;
+    }
+    return all;
   }
 
   private async call<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {

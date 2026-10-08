@@ -21,6 +21,9 @@ export type OpsCan = {
   refundRequest: boolean;
   refundApprove: boolean;
   refunds: boolean;
+  finance: boolean;
+  reconcile: boolean;
+  financeExport: boolean;
 };
 
 export function opsCan(actor: Actor): OpsCan {
@@ -40,6 +43,9 @@ export function opsCan(actor: Actor): OpsCan {
     refundRequest: hasPermission(actor, "refund.request"),
     refundApprove: hasPermission(actor, "refund.approve"),
     refunds: ["refund.approve", "payment.view", "refund.request"].some((code) => hasPermission(actor, code)),
+    finance: hasPermission(actor, "payment.view") || hasPermission(actor, "finance.reconcile"),
+    reconcile: hasPermission(actor, "finance.reconcile"),
+    financeExport: hasPermission(actor, "finance.export"),
   };
 }
 
@@ -61,6 +67,7 @@ export async function OpsShell({ children }: { children: (can: OpsCan) => ReactN
         {can.fleet ? <Link href="/ops/fleet" className="underline-offset-4 hover:underline">Buses</Link> : null}
         {can.schedules ? <Link href="/ops/schedules" className="underline-offset-4 hover:underline">Schedules</Link> : null}
         {can.refunds ? <Link href="/ops/refunds" className="underline-offset-4 hover:underline">Refunds</Link> : null}
+        {can.finance ? <Link href="/ops/finance" className="underline-offset-4 hover:underline">Finance</Link> : null}
         <Link href="/staff" className="underline-offset-4 hover:underline">Boarding app</Link>
       </nav>
       {children(can)}
