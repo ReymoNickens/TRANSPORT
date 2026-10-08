@@ -1,0 +1,837 @@
+<title>Campus Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Schibsted+Grotesk:wght@400;500;600;700&family=Martian+Mono:wght@400;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* Layout: a story rail on the left explains what is happening; the live app sits on the right (phone frame for passenger and conductor, a wide console for operations). */
+:root {
+  --paper: #EEF2EC;
+  --card: #FFFFFF;
+  --ink: #0F2219;
+  --muted: #56685E;
+  --line: #D3DDD4;
+  --forest: #0E5A3B;
+  --forest-soft: #DCEBE2;
+  --momo: #FFC629;
+  --momo-ink: #2A2100;
+  --ok: #1D8653;
+  --ok-soft: #DDF1E5;
+  --warn: #B86A00;
+  --warn-soft: #FBEBD2;
+  --bad: #C2362B;
+  --bad-soft: #F9DEDB;
+  --blind: #0A120E;
+  --blind-glow: #FFD24A;
+  --seat: #FFFFFF;
+  --seat-taken: #C9D3CB;
+  --shadow: 0 1px 2px rgb(15 34 25 / .06), 0 8px 24px rgb(15 34 25 / .08);
+  --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --mono: "Martian Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0B1511; --card: #12211A; --ink: #E7EFE9; --muted: #93A69A; --line: #22362C;
+    --forest: #48B282; --forest-soft: #183527; --momo: #FFC629; --momo-ink: #2A2100;
+    --ok: #4CC587; --ok-soft: #153526; --warn: #F0A33A; --warn-soft: #3A2A12; --bad: #F06A5E; --bad-soft: #3D1A17;
+    --seat: #1A2D24; --seat-taken: #2C4136; --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0B1511; --card: #12211A; --ink: #E7EFE9; --muted: #93A69A; --line: #22362C;
+  --forest: #48B282; --forest-soft: #183527; --momo: #FFC629; --momo-ink: #2A2100;
+  --ok: #4CC587; --ok-soft: #153526; --warn: #F0A33A; --warn-soft: #3A2A12; --bad: #F06A5E; --bad-soft: #3D1A17;
+  --seat: #1A2D24; --seat-taken: #2C4136; --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 var(--body); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--momo); outline-offset: 2px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.num { font-variant-numeric: tabular-nums; }
+
+.shell { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; display: grid; gap: 20px; }
+
+/* Top bar */
+.topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark { width: 40px; height: 40px; border-radius: 10px; background: var(--forest); display: grid; place-items: center; }
+.brand-mark svg { width: 24px; height: 24px; }
+.brand-name { font-family: var(--display); font-weight: 800; font-size: 28px; letter-spacing: .02em; text-transform: uppercase; line-height: 1; }
+.brand-sub { font-size: 12px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.modes { display: flex; gap: 4px; padding: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--shadow); }
+.modes button { border: 0; background: transparent; padding: 8px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; color: var(--muted); }
+.modes button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+
+/* Destination blind: the lit sign on the front of a coach */
+.blind { background: var(--blind); border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; overflow: hidden; position: relative; }
+.blind::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 2px, rgb(0 0 0 / .28) 2px 3px); pointer-events: none; }
+.blind-text { font-family: var(--display); font-weight: 800; text-transform: uppercase; color: var(--blind-glow); letter-spacing: .06em; font-size: clamp(22px, 4.4vw, 40px); line-height: 1; text-shadow: 0 0 12px rgb(255 210 74 / .45); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.blind-meta { font-family: var(--mono); font-size: 11px; color: #9FB3A7; text-transform: uppercase; letter-spacing: .08em; text-align: right; flex-shrink: 0; }
+
+/* Stage: story rail + device */
+.stage { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 28px; align-items: start; }
+.stage.wide { grid-template-columns: minmax(0, 300px) minmax(0, 1fr); }
+@media (max-width: 860px) { .stage, .stage.wide { grid-template-columns: minmax(0, 1fr); } .story { order: 2; } }
+
+.story { display: grid; gap: 14px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+@media (max-width: 860px) { .story { position: static; } }
+.story-kicker { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--forest); font-weight: 700; }
+.story h2 { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1.02; text-transform: uppercase; letter-spacing: .01em; }
+.story p { margin: 0; color: var(--muted); max-width: 60ch; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.steps li { display: grid; grid-template-columns: 22px minmax(0,1fr); gap: 10px; padding: 8px 10px; border-radius: 10px; font-size: 14px; color: var(--muted); }
+.steps li .dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+.steps li.done { color: var(--ink); }
+.steps li.done .dot { background: var(--forest); border-color: var(--forest); color: #fff; }
+.steps li.now { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+.steps li.now .dot { border-color: var(--momo); background: var(--momo); color: var(--momo-ink); }
+.behind { border-left: 3px solid var(--momo); padding: 10px 14px; background: var(--card); border-radius: 0 10px 10px 0; font-size: 13.5px; }
+.behind strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--forest); margin-bottom: 2px; }
+
+/* Phone */
+.device-wrap { display: flex; justify-content: center; }
+.phone { width: min(390px, 100%); background: var(--card); border-radius: 34px; border: 10px solid var(--ink); box-shadow: var(--shadow), 0 30px 60px rgb(15 34 25 / .18); overflow: hidden; display: flex; flex-direction: column; height: 760px; max-height: calc(100vh - 140px); min-height: 600px; position: relative; }
+@media (max-width: 460px) { .phone { border-width: 0; border-radius: 18px; height: auto; max-height: none; min-height: 680px; } }
+.statusbar { display: flex; justify-content: space-between; padding: 10px 22px 6px; font-size: 12px; font-weight: 600; font-family: var(--mono); }
+.screen { flex: 1; overflow-y: auto; padding: 4px 18px 18px; display: flex; flex-direction: column; gap: 14px; }
+.screen-head { display: flex; align-items: center; gap: 10px; }
+.back { border: 1px solid var(--line); background: transparent; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
+.screen-title { font-weight: 700; font-size: 17px; }
+.screen-sub { font-size: 13px; color: var(--muted); }
+.label { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 600; }
+
+.btn { border: 0; border-radius: 14px; padding: 15px 18px; font-weight: 700; font-size: 16px; background: var(--forest); color: #fff; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform .12s ease, filter .12s; }
+.btn:active { transform: scale(.98); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.momo { background: var(--momo); color: var(--momo-ink); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn.small { padding: 9px 12px; font-size: 13px; border-radius: 10px; width: auto; }
+.btn.danger { background: var(--bad); }
+
+.field { display: grid; gap: 6px; }
+.field input, .field select { border: 1.5px solid var(--line); background: var(--paper); border-radius: 12px; padding: 12px 14px; font: inherit; color: var(--ink); width: 100%; }
+.field input:focus { border-color: var(--forest); outline: none; }
+
+/* Passenger: search */
+.hero-card { background: var(--forest); color: #fff; border-radius: 20px; padding: 18px; display: grid; gap: 14px; position: relative; overflow: hidden; }
+.hero-card .greet { font-size: 13px; opacity: .8; }
+.hero-card h3 { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: .95; text-transform: uppercase; }
+.route-pick { background: var(--card); color: var(--ink); border-radius: 14px; display: grid; grid-template-columns: minmax(0,1fr) 40px; align-items: center; }
+.route-pick .stop { padding: 11px 14px; display: grid; }
+.route-pick .stop + .stop { border-top: 1px dashed var(--line); }
+.route-pick .stop span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.route-pick .stop b { font-size: 15px; }
+.swap { grid-row: 1 / span 2; grid-column: 2; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--paper); display: grid; place-items: center; }
+.days { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 6px; }
+.day { border: 1.5px solid rgb(255 255 255 / .25); background: transparent; color: #fff; border-radius: 12px; padding: 7px 0; display: grid; justify-items: center; line-height: 1.15; }
+.day small { font-size: 10px; text-transform: uppercase; opacity: .75; letter-spacing: .06em; }
+.day b { font-size: 17px; }
+.day[aria-pressed="true"] { background: var(--momo); color: var(--momo-ink); border-color: var(--momo); }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: rgb(255 255 255 / .1); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+.switch { width: 46px; height: 28px; border-radius: 99px; border: 0; background: rgb(255 255 255 / .3); position: relative; flex-shrink: 0; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: left .15s; }
+.switch[aria-checked="true"] { background: var(--momo); }
+.switch[aria-checked="true"]::after { left: 21px; }
+.recent { display: grid; gap: 8px; }
+.recent-item { display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 14px; background: var(--card); }
+
+/* Results */
+.dep { border: 1.5px solid var(--line); border-radius: 18px; padding: 14px; display: grid; gap: 10px; background: var(--card); text-align: left; width: 100%; transition: border-color .15s, transform .12s; }
+.dep:hover { border-color: var(--forest); }
+.dep:active { transform: scale(.99); }
+.dep-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.dep-time { font-family: var(--display); font-size: 36px; font-weight: 800; line-height: 1; }
+.dep-time small { font-family: var(--body); font-size: 13px; font-weight: 500; color: var(--muted); margin-left: 6px; }
+.dep-price { text-align: right; }
+.dep-price b { font-size: 18px; display: block; }
+.dep-price s { font-size: 12px; color: var(--muted); }
+.dep-line { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+.dep-line .track { height: 2px; background: repeating-linear-gradient(90deg, var(--line) 0 6px, transparent 6px 10px); position: relative; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 99px; background: var(--forest-soft); color: var(--forest); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.bad { background: var(--bad-soft); color: var(--bad); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+
+/* Seat map */
+.coach { border: 2px solid var(--line); border-radius: 46px 46px 18px 18px; padding: 16px 14px 14px; background: var(--paper); display: grid; gap: 8px; }
+.coach-front { display: flex; justify-content: space-between; align-items: center; padding: 0 6px 6px; border-bottom: 1px dashed var(--line); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.wheel { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--muted); opacity: .6; }
+.seat-row { display: grid; grid-template-columns: 1fr 1fr .6fr 1fr 1fr; gap: 7px; align-items: center; }
+.row-no { text-align: center; font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.seat { aspect-ratio: 1 / .92; border-radius: 9px 9px 6px 6px; border: 1.5px solid var(--line); background: var(--seat); font-family: var(--mono); font-size: 11px; font-weight: 600; display: grid; place-items: center; position: relative; transition: transform .1s, background .15s; max-width: 100%; }
+.seat::before { content: ""; position: absolute; left: 18%; right: 18%; top: -5px; height: 5px; border-radius: 4px 4px 0 0; background: inherit; border: 1.5px solid var(--line); border-bottom: 0; }
+.seat.premium { border-color: var(--momo); }
+.seat.taken { background: var(--seat-taken); border-color: transparent; color: transparent; cursor: not-allowed; }
+.seat.taken::before { border-color: transparent; }
+.seat.held { background: repeating-linear-gradient(45deg, var(--seat-taken) 0 4px, transparent 4px 8px); color: transparent; cursor: not-allowed; }
+.seat.mine { background: var(--forest); border-color: var(--forest); color: #fff; transform: translateY(-1px); }
+.seat.mine::before { border-color: var(--forest); }
+.seat:not(.taken):not(.held):not(.mine):hover { border-color: var(--forest); }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 13px; border-radius: 4px; border: 1.5px solid var(--line); background: var(--seat); display: inline-block; }
+.legend i.t { background: var(--seat-taken); border-color: transparent; }
+.legend i.m { background: var(--forest); border-color: var(--forest); }
+.legend i.p { border-color: var(--momo); }
+.dock { position: sticky; bottom: -18px; margin: 0 -18px -18px; padding: 12px 18px 16px; background: var(--card); border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.dock-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px; }
+.timer { font-family: var(--mono); font-size: 12px; background: var(--warn-soft); color: var(--warn); padding: 4px 9px; border-radius: 99px; font-weight: 600; }
+
+/* Pay */
+.summary { border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 8px; font-size: 14px; }
+.summary div { display: flex; justify-content: space-between; gap: 10px; }
+.summary .total { border-top: 1px dashed var(--line); padding-top: 10px; font-weight: 700; font-size: 17px; }
+.networks { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+.net { border: 1.5px solid var(--line); background: var(--card); border-radius: 14px; padding: 12px 6px; display: grid; justify-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+.net i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 800; font-size: 11px; }
+.net[aria-pressed="true"] { border-color: var(--forest); box-shadow: inset 0 0 0 1px var(--forest); }
+.waiting { display: grid; justify-items: center; text-align: center; gap: 14px; padding: 30px 6px; }
+.pulse { width: 92px; height: 92px; border-radius: 50%; background: var(--momo); display: grid; place-items: center; position: relative; }
+.pulse::before, .pulse::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--momo); animation: ring 1.8s ease-out infinite; }
+.pulse::after { animation-delay: .9s; }
+@keyframes ring { from { transform: scale(1); opacity: .9; } to { transform: scale(1.7); opacity: 0; } }
+.momo-prompt { background: var(--ink); color: var(--paper); border-radius: 16px; padding: 14px; font-size: 13.5px; text-align: left; width: 100%; font-family: var(--mono); line-height: 1.6; }
+
+/* Ticket */
+.ticket { border-radius: 22px; background: var(--card); border: 1.5px solid var(--line); overflow: hidden; display: grid; }
+.ticket-head { background: var(--forest); color: #fff; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.ticket-head b { font-family: var(--display); font-size: 30px; line-height: 1; text-transform: uppercase; letter-spacing: .02em; }
+.ticket-seat { background: var(--momo); color: var(--momo-ink); border-radius: 12px; padding: 6px 12px; text-align: center; line-height: 1; }
+.ticket-seat small { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; display: block; }
+.ticket-seat span { font-family: var(--display); font-weight: 800; font-size: 30px; }
+.ticket-body { padding: 14px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; font-size: 14px; }
+.ticket-body .label { margin-bottom: 1px; }
+.perf { height: 18px; position: relative; background: radial-gradient(circle at 0 50%, var(--paper) 9px, transparent 10px), radial-gradient(circle at 100% 50%, var(--paper) 9px, transparent 10px); }
+.perf::after { content: ""; position: absolute; left: 16px; right: 16px; top: 50%; border-top: 2px dashed var(--line); }
+.qr-zone { display: grid; justify-items: center; gap: 10px; padding: 6px 16px 18px; }
+.qr { background: #fff; padding: 10px; border-radius: 12px; }
+.qr img, .qr canvas { display: block; }
+.code { font-family: var(--mono); font-size: 22px; letter-spacing: .3em; font-weight: 600; }
+.sms { align-self: flex-start; max-width: 88%; background: var(--paper); border: 1px solid var(--line); border-radius: 18px 18px 18px 4px; padding: 10px 12px; font-size: 13px; }
+.sms small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 3px; }
+
+/* Conductor */
+.journey-card { background: var(--ink); color: var(--paper); border-radius: 20px; padding: 16px; display: grid; gap: 12px; }
+.journey-card .t { font-family: var(--display); font-size: 40px; font-weight: 800; line-height: .9; }
+.progress { height: 10px; background: rgb(255 255 255 / .15); border-radius: 99px; overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--momo); border-radius: 99px; transition: width .4s; }
+.viewfinder { aspect-ratio: 1; max-width: 100%; border-radius: 22px; background: radial-gradient(circle at 50% 40%, #2b3a33, #0a120e); position: relative; overflow: hidden; display: grid; place-items: center; }
+.viewfinder .frame { width: 62%; aspect-ratio: 1; position: relative; }
+.viewfinder .frame span { position: absolute; width: 28px; height: 28px; border-color: var(--momo); border-style: solid; }
+.viewfinder .frame span:nth-child(1) { top: 0; left: 0; border-width: 4px 0 0 4px; border-radius: 8px 0 0 0; }
+.viewfinder .frame span:nth-child(2) { top: 0; right: 0; border-width: 4px 4px 0 0; border-radius: 0 8px 0 0; }
+.viewfinder .frame span:nth-child(3) { bottom: 0; left: 0; border-width: 0 0 4px 4px; border-radius: 0 0 0 8px; }
+.viewfinder .frame span:nth-child(4) { bottom: 0; right: 0; border-width: 0 4px 4px 0; border-radius: 0 0 8px 0; }
+.scanline { position: absolute; left: 19%; right: 19%; height: 2px; background: var(--momo); box-shadow: 0 0 14px var(--momo); animation: scan 2.2s ease-in-out infinite; }
+@keyframes scan { 0%, 100% { top: 22%; } 50% { top: 76%; } }
+.viewfinder .hint { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; color: #C9D6CE; font-size: 13px; }
+.result { border-radius: 20px; padding: 16px; display: grid; gap: 10px; border: 2px solid; }
+.result.ok { background: var(--ok-soft); border-color: var(--ok); }
+.result.bad { background: var(--bad-soft); border-color: var(--bad); }
+.result-title { font-weight: 800; font-size: 20px; display: flex; gap: 8px; align-items: center; }
+.result.ok .result-title { color: var(--ok); }
+.result.bad .result-title { color: var(--bad); }
+.big-seat { font-family: var(--display); font-weight: 800; font-size: 64px; line-height: .9; }
+.check-id { background: var(--ink); color: var(--paper); border-radius: 10px; padding: 8px 12px; font-weight: 700; }
+.result dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font-size: 14px; }
+.result dt { color: var(--muted); }
+.result dd { margin: 0; font-weight: 600; }
+
+/* Operations console */
+.console { background: var(--card); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; display: grid; min-width: 0; }
+.console-bar { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+.console-nav { display: flex; flex-wrap: wrap; gap: 4px; }
+.console-nav button { border: 0; background: transparent; padding: 7px 12px; border-radius: 9px; font-weight: 600; font-size: 14px; color: var(--muted); }
+.console-nav button[aria-pressed="true"] { background: var(--forest-soft); color: var(--forest); }
+.console-body { padding: 20px; display: grid; gap: 22px; min-width: 0; }
+.band-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.band-title h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.attention { display: grid; gap: 8px; }
+.alert { display: grid; grid-template-columns: 6px minmax(0,1fr) auto; gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 12px 0; overflow: hidden; background: var(--card); transition: opacity .3s, transform .3s; }
+.alert .stripe { align-self: stretch; }
+.alert.critical .stripe { background: var(--bad); }
+.alert.high .stripe { background: var(--warn); }
+.alert.normal .stripe { background: var(--forest); }
+.alert p { margin: 0; font-weight: 600; font-size: 14.5px; }
+.alert small { color: var(--muted); font-size: 12.5px; }
+.alert.gone { opacity: 0; transform: translateX(20px); }
+.board { border-radius: 16px; overflow: hidden; background: var(--blind); }
+.board-row { display: grid; grid-template-columns: 70px minmax(0, 1.5fr) minmax(0,1fr) minmax(0, 1fr) 132px; gap: 12px; padding: 11px 16px; align-items: center; border-bottom: 1px solid #1B2A22; color: #D9E6DD; font-size: 14px; }
+.board-row.head { font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em; color: #7E978A; padding-block: 9px; }
+.board-row .time { font-family: var(--display); font-weight: 800; font-size: 24px; color: var(--blind-glow); letter-spacing: .03em; line-height: 1; }
+.board-row .dest { font-weight: 700; color: #fff; }
+.board-row .sub { font-size: 12px; color: #8EA698; }
+.seatbar { height: 6px; background: #22352B; border-radius: 99px; overflow: hidden; margin-top: 4px; }
+.seatbar i { display: block; height: 100%; background: var(--blind-glow); }
+.status { font-family: var(--mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; padding: 4px 8px; border-radius: 6px; text-align: center; }
+.status.boarding { background: var(--momo); color: var(--momo-ink); }
+.status.sale { background: #1C3A2B; color: #8BE0AF; }
+.status.left { background: #26302B; color: #A9B8AF; }
+.status.attn { background: #4A1D19; color: #FF9C91; }
+@media (max-width: 720px) {
+  .board-row { grid-template-columns: 58px minmax(0, 1fr) 104px; }
+  .board-row > :nth-child(3), .board-row > :nth-child(4) { display: none; }
+}
+.figures { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 10px; }
+@media (max-width: 720px) { .figures { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.fig { border-top: 2px solid var(--line); padding-top: 8px; display: grid; gap: 2px; }
+.fig span { font-size: 12px; color: var(--muted); }
+.fig b { font-size: 21px; font-variant-numeric: tabular-nums; }
+.fig small { font-size: 11.5px; color: var(--ok); font-weight: 600; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 900px) { .two { grid-template-columns: minmax(0,1fr); } }
+.panel { border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.panel h4 { margin: 0; font-size: 16px; }
+.remap { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.remap th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.remap td { padding: 7px 4px; border-bottom: 1px solid var(--line); }
+.remap tr { transition: background .3s; }
+.remap tr.flash { background: var(--ok-soft); }
+.arrow { color: var(--muted); }
+.table-scroll { overflow-x: auto; }
+.recon { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+.recon div { background: var(--paper); border-radius: 12px; padding: 10px; display: grid; }
+.recon span { font-size: 11.5px; color: var(--muted); }
+.recon b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.ledger-ok { display: flex; gap: 10px; align-items: center; color: var(--ok); font-weight: 600; font-size: 14px; }
+
+.toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 22px); transform: translate(-50%, 140%); background: var(--ink); color: var(--paper); padding: 12px 18px; border-radius: 14px; font-weight: 600; font-size: 14px; box-shadow: var(--shadow); transition: transform .3s cubic-bezier(.2,.9,.3,1.2); max-width: calc(100vw - 32px); z-index: 10; }
+.toast.show { transform: translate(-50%, 0); }
+.foot { font-size: 12.5px; color: var(--muted); text-align: center; }
+.fade-in { animation: fade .28s ease both; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="13" rx="3" fill="#FFC629"/><rect x="5.5" y="6.5" width="13" height="5" rx="1" fill="#0E5A3B"/><circle cx="7.5" cy="19" r="2" fill="#FFC629"/><circle cx="16.5" cy="19" r="2" fill="#FFC629"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Campus Coach</div>
+        <div class="brand-sub">Student travel · Ghana · Prototype for review</div>
+      </div>
+    </div>
+    <nav class="modes" aria-label="Which app">
+      <button type="button" id="mode-passenger" aria-pressed="true" data-mode="passenger">Passenger</button>
+      <button type="button" id="mode-conductor" aria-pressed="false" data-mode="conductor">Conductor</button>
+      <button type="button" id="mode-ops" aria-pressed="false" data-mode="ops">Manager</button>
+    </nav>
+  </header>
+
+  <div class="blind" aria-live="polite">
+    <div class="blind-text" id="blind">Accra Circle → Cape Coast UCC · 07:00</div>
+    <div class="blind-meta">GR-2468-24<br>Coach C1 · 52 seats</div>
+  </div>
+
+  <main class="stage" id="stage">
+    <aside class="story" id="story"></aside>
+    <section class="device-wrap" id="device"></section>
+  </main>
+
+  <p class="foot">Example data for demonstration. Payments, text messages and scans are simulated; the real system runs these through Paystack and Arkesel.</p>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const ced = (p) => "GH₵ " + Math.floor(p / 100).toLocaleString("en-GH") + "." + String(p % 100).padStart(2, "0");
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const toastEl = $("#toast");
+  let toastTimer;
+  function toast(text) {
+    toastEl.textContent = text;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2600);
+  }
+
+  const icons = {
+    back: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>',
+    swap: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg>',
+    phone: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2A2100" stroke-width="2" stroke-linecap="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>',
+    check: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    cross: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  };
+
+  // ---------------------------------------------------------------- data
+  const FARE = 8000, PREMIUM = 10000, FEE = 150, STUDENT = 0.10;
+  const departures = [
+    { time: "05:30", arrive: "08:15", bus: "Coach · 2+2", left: 6, tag: ["warn", "6 seats left"] },
+    { time: "07:00", arrive: "09:45", bus: "Coach · 2+2 · Wi-Fi", left: 23, tag: ["ok", "Most popular"] },
+    { time: "10:30", arrive: "13:15", bus: "Coach · 2+2", left: 41, tag: null },
+    { time: "14:00", arrive: "16:45", bus: "Executive · 2+1", left: 0, tag: ["bad", "Sold out"] },
+    { time: "17:30", arrive: "20:15", bus: "Coach · 2+2", left: 33, tag: null },
+  ];
+  // Deterministic "taken" seats so the map looks lived-in.
+  const taken = new Set(["1A","1B","2C","2D","3A","4B","4C","5D","6A","6B","7C","8A","8D","9B","10C","10D","11A","12B","12C","13A","13D","3D","5A","9C","11D"]);
+  const held = new Set(["7A", "7B"]);
+  const days = (() => {
+    const out = [];
+    const names = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    const now = new Date();
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(now.getTime() + i * 86400000);
+      out.push({ label: i === 0 ? "Today" : i === 1 ? "Tmrw" : names[d.getDay()], date: d.getDate(), full: d });
+    }
+    return out;
+  })();
+
+  const state = {
+    mode: "passenger",
+    p: { step: "search", day: 1, student: true, dep: 1, seats: [], name: "Ama Mensah", phone: "024 123 4567", studentNo: "UCC/PS/22/0418", net: "MTN", holdEnds: 0, token: "" },
+    c: { step: "home", boarded: 31, idx: 0, result: null },
+    o: { tab: "today", resolved: new Set(), remapped: false, signed: false },
+  };
+
+  // ---------------------------------------------------------------- shell
+  function setMode(mode) {
+    state.mode = mode;
+    document.querySelectorAll(".modes button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+    $("#stage").classList.toggle("wide", mode === "ops");
+    render();
+  }
+  document.querySelectorAll(".modes button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+  function setBlind(text) { $("#blind").textContent = text; }
+
+  function renderStory(kicker, title, body, steps, current, behind) {
+    $("#story").innerHTML = `
+      <div class="story-kicker">${kicker}</div>
+      <h2>${title}</h2>
+      <p>${body}</p>
+      <ol class="steps">${steps.map((s, i) => `<li class="${i < current ? "done" : i === current ? "now" : ""}"><span class="dot">${i < current ? "✓" : i + 1}</span><span>${s}</span></li>`).join("")}</ol>
+      ${behind ? `<div class="behind fade-in"><strong>Behind the scenes</strong>${behind}</div>` : ""}`;
+  }
+
+  function phone(inner) {
+    const t = new Date();
+    return `<div class="phone"><div class="statusbar"><span>${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}</span><span>4G ▮▮▮▯</span></div><div class="screen" id="screen">${inner}</div></div>`;
+  }
+
+  // ---------------------------------------------------------------- passenger
+  const pSteps = ["Choose your trip", "Pick your seats", "Your details", "Pay with mobile money", "Your ticket"];
+  const pIndex = { search: 0, results: 0, seats: 1, details: 2, pay: 3, paying: 3, ticket: 4 };
+
+  function price() {
+    const p = state.p;
+    const base = p.seats.reduce((s, n) => s + (n.startsWith("1") && n.length === 2 ? PREMIUM : FARE), 0);
+    const disc = p.student && p.seats.length ? Math.round((p.seats[0].startsWith("1") && p.seats[0].length === 2 ? PREMIUM : FARE) * STUDENT) : 0;
+    const fees = p.seats.length ? FEE : 0;
+    return { base, disc, fees, total: base - disc + fees };
+  }
+
+  function passenger() {
+    const p = state.p;
+    const dep = departures[p.dep];
+    setBlind(`Accra Circle → Cape Coast UCC · ${dep.time}`);
+    const behind = {
+      search: "Only the operator's own buses and fares. Search reads live seats, so a sold-out bus says so before anyone picks it.",
+      results: "Prices come from the server's fare table, never the phone. The student discount is checked against a student number.",
+      seats: "A tapped seat is held for this passenger for 10 minutes. The database refuses a second claim on the same seat, so it can never be sold twice, even if 100 people tap it at once.",
+      details: "One ticket per seat. Each traveller gets their own text message with their own ticket link and boarding code.",
+      pay: "Paystack's hosted checkout handles the money. The phone saying 'paid' is never trusted: the server waits for Paystack's signed confirmation.",
+      paying: "If the confirmation is slow, the server asks Paystack directly every minute. A payment that arrives late still gets the same seat, a same-class seat, or an automatic refund.",
+      ticket: "The QR code holds only a random code; no name, phone or price. The first scan wins, so a forwarded screenshot cannot board twice.",
+    }[p.step];
+    renderStory("Passenger app", "Book a real seat in under a minute", "A student going home for the weekend, on a mid-range Android phone with patchy data.", pSteps, pIndex[p.step], behind);
+
+    let html = "";
+    if (p.step === "search") {
+      html = `
+        <div class="hero-card fade-in">
+          <div class="greet">Akwaaba, Ama</div>
+          <h3>Where are you going?</h3>
+          <div class="route-pick">
+            <div class="stop"><span>From</span><b>Accra · Circle Station</b></div>
+            <div class="stop"><span>To</span><b>Cape Coast · UCC Gate</b></div>
+            <button class="swap" type="button" id="swap" aria-label="Swap from and to">${icons.swap}</button>
+          </div>
+          <div class="days" role="group" aria-label="Day of travel">
+            ${days.map((d, i) => `<button type="button" class="day" data-day="${i}" aria-pressed="${i === p.day}"><small>${d.label}</small><b>${d.date}</b></button>`).join("")}
+          </div>
+          <div class="toggle-row"><span>I'm a student <span style="opacity:.75">(10% off with your student number)</span></span><button type="button" class="switch" id="student" role="switch" aria-checked="${p.student}" aria-label="Student fare"></button></div>
+          <button class="btn momo" type="button" id="find">Find buses</button>
+        </div>
+        <div class="label">Recent trips</div>
+        <div class="recent">
+          <div class="recent-item"><span>Cape Coast → Accra</span><span class="chip ok">Travelled · Sun</span></div>
+          <div class="recent-item"><span>Accra → Kumasi Kejetia</span><span class="chip">Seat 8C · 12 Sep</span></div>
+        </div>`;
+    } else if (p.step === "results") {
+      html = `
+        <div class="screen-head"><button class="back" type="button" data-go="search" aria-label="Back">${icons.back}</button><div><div class="screen-title">Accra → Cape Coast</div><div class="screen-sub">${days[p.day].label === "Tmrw" ? "Tomorrow" : days[p.day].label}, ${days[p.day].full.toLocaleDateString("en-GH", { day: "numeric", month: "short" })} · 5 departures</div></div></div>
+        ${departures.map((d, i) => {
+          const from = p.student ? FARE - FARE * STUDENT : FARE;
+          return `<button class="dep fade-in" type="button" data-dep="${i}" ${d.left === 0 ? "disabled style=\"opacity:.55;cursor:not-allowed\"" : ""}>
+            <div class="dep-top"><div class="dep-time">${d.time}<small>→ ${d.arrive}</small></div><div class="dep-price"><b>${ced(from)}</b>${p.student ? `<s>${ced(FARE)}</s>` : ""}</div></div>
+            <div class="dep-line"><span>Circle</span><span class="track"></span><span>UCC Gate</span></div>
+            <div class="chips"><span class="chip">2h 45m · via Kasoa, Winneba</span><span class="chip">${d.bus}</span>${d.tag ? `<span class="chip ${d.tag[0]}">${d.tag[1]}</span>` : `<span class="chip">${d.left} seats left</span>`}</div>
+          </button>`;
+        }).join("")}`;
+    } else if (p.step === "seats") {
+      const rows = [];
+      for (let r = 1; r <= 13; r++) {
+        const cell = (l) => {
+          const n = r + l;
+          const cls = ["seat", r === 1 ? "premium" : "", taken.has(n) ? "taken" : "", held.has(n) ? "held" : "", p.seats.includes(n) ? "mine" : ""].join(" ");
+          const dis = taken.has(n) || held.has(n);
+          const label = `Seat ${n}${r === 1 ? ", premium" : ""}${taken.has(n) ? ", taken" : held.has(n) ? ", held by someone paying" : p.seats.includes(n) ? ", selected" : ", free"}`;
+          return `<button type="button" class="${cls}" data-seat="${n}" aria-label="${label}" ${dis ? "aria-disabled=\"true\"" : ""}>${n}</button>`;
+        };
+        rows.push(`<div class="seat-row">${cell("A")}${cell("B")}<div class="row-no">${r}</div>${cell("C")}${cell("D")}</div>`);
+      }
+      const pr = price();
+      html = `
+        <div class="screen-head"><button class="back" type="button" data-go="results" aria-label="Back">${icons.back}</button><div><div class="screen-title">Choose up to 6 seats</div><div class="screen-sub">${dep.time} · Coach GR-2468-24</div></div></div>
+        <div class="legend"><span><i></i>Free</span><span><i class="t"></i>Taken</span><span><i class="m"></i>Yours</span><span><i class="p"></i>Front row · ${ced(PREMIUM)}</span></div>
+        <div class="coach"><div class="coach-front"><span>Front · door</span><span class="wheel" aria-hidden="true"></span></div>${rows.join("")}</div>
+        <div class="dock">
+          <div class="dock-row"><span>${p.seats.length ? `Seat${p.seats.length > 1 ? "s" : ""} <b class="mono">${p.seats.join(", ")}</b>` : "Tap a free seat"}</span>${p.seats.length ? `<span class="timer" id="timer">10:00 held</span>` : ""}</div>
+          <button class="btn" type="button" id="toDetails" ${p.seats.length ? "" : "disabled"}>${p.seats.length ? `Continue · ${ced(pr.total)}` : "Continue"}</button>
+        </div>`;
+    } else if (p.step === "details") {
+      html = `
+        <div class="screen-head"><button class="back" type="button" data-go="seats" aria-label="Back">${icons.back}</button><div><div class="screen-title">Who is travelling?</div><div class="screen-sub">Seat ${esc(p.seats[0])} · <span class="timer" id="timer">held</span></div></div></div>
+        <div class="field"><label class="label" for="pname">Full name</label><input id="pname" value="${esc(p.name)}" autocomplete="name"></div>
+        <div class="field"><label class="label" for="pphone">Phone number (for your ticket by text)</label><input id="pphone" value="${esc(p.phone)}" inputmode="tel"></div>
+        ${p.student ? `<div class="field"><label class="label" for="pstud">Student number</label><input id="pstud" value="${esc(p.studentNo)}"><span class="screen-sub">Bring your student ID: the conductor checks it at boarding.</span></div>` : ""}
+        ${p.seats.length > 1 ? `<div class="behind">${p.seats.length - 1} more traveller${p.seats.length > 2 ? "s" : ""}: add their names next (each gets their own ticket).</div>` : ""}
+        <div style="flex:1"></div>
+        <button class="btn" type="button" id="toPay">Review and pay</button>`;
+    } else if (p.step === "pay") {
+      const pr = price();
+      html = `
+        <div class="screen-head"><button class="back" type="button" data-go="details" aria-label="Back">${icons.back}</button><div><div class="screen-title">Review and pay</div><div class="screen-sub">Seats held for you · <span class="timer" id="timer">held</span></div></div></div>
+        <div class="summary">
+          <div><span>${p.seats.length} seat${p.seats.length > 1 ? "s" : ""} · ${dep.time} Accra → Cape Coast</span><span class="num">${ced(pr.base)}</span></div>
+          ${pr.disc ? `<div style="color:var(--ok)"><span>Student fare (10%)</span><span class="num">−${ced(pr.disc)}</span></div>` : ""}
+          <div><span>Booking fee</span><span class="num">${ced(pr.fees)}</span></div>
+          <div class="total"><span>Total</span><span class="num">${ced(pr.total)}</span></div>
+        </div>
+        <div class="label">Pay with</div>
+        <div class="networks" role="group" aria-label="Mobile money network">
+          ${[["MTN", "#FFCB05", "#1A1A1A", "MoMo"], ["Telecel", "#E60000", "#fff", "Cash"], ["AirtelTigo", "#0033A0", "#fff", "Money"]].map(([n, bg, fg, s]) => `<button type="button" class="net" data-net="${n}" aria-pressed="${p.net === n}"><i style="background:${bg};color:${fg}">${n[0]}</i>${n}<span class="screen-sub" style="font-size:11px">${s}</span></button>`).join("")}
+        </div>
+        <p class="screen-sub" style="margin:0">Cancel 24 hours or more before departure: full fare back. 6 to 24 hours: half. If we cancel, you get everything back.</p>
+        <div style="flex:1"></div>
+        <button class="btn momo" type="button" id="paynow">Pay ${ced(pr.total)} with ${p.net}</button>`;
+    } else if (p.step === "paying") {
+      const pr = price();
+      html = `
+        <div class="waiting fade-in">
+          <div class="pulse">${icons.phone}</div>
+          <div class="screen-title">Approve the prompt on your phone</div>
+          <div class="screen-sub">We sent a ${p.net} MoMo request for ${ced(pr.total)} to ${esc(p.phone.replace(/\d(?=\d{3})/g, "•"))}.</div>
+          <div class="momo-prompt">Paystack wants to debit ${ced(pr.total)} from your wallet for CAMPUS COACH.<br>Enter MoMo PIN to approve:<br>[ • • • • ]</div>
+          <div class="screen-sub" id="payStatus">Waiting for confirmation…</div>
+        </div>`;
+    } else if (p.step === "ticket") {
+      html = `
+        <div class="screen-head"><div><div class="screen-title" style="color:var(--ok)">Paid. You're going home.</div><div class="screen-sub">Booking <span class="mono">K7Q2M9XF</span> · ticket also sent by text</div></div></div>
+        <div class="ticket fade-in">
+          <div class="ticket-head"><div><div class="label" style="color:rgb(255 255 255 / .75)">${days[p.day].full.toLocaleDateString("en-GH", { weekday: "short", day: "numeric", month: "short" })} · ${dep.time}</div><b>Accra → Cape Coast</b></div><div class="ticket-seat"><small>Seat</small><span>${esc(p.seats[0])}</span></div></div>
+          <div class="ticket-body">
+            <div><div class="label">Passenger</div>${esc(p.name)}</div>
+            <div><div class="label">Fare</div>${p.student ? "Student" : "Standard"}</div>
+            <div><div class="label">Boards at</div>Circle Station, Bay 4</div>
+            <div><div class="label">Ticket</div><span class="mono">TF4R6Y9CF9</span></div>
+          </div>
+          <div class="perf" aria-hidden="true"></div>
+          <div class="qr-zone">
+            <div class="qr" id="qr" role="img" aria-label="Boarding QR code"></div>
+            <div class="screen-sub">No signal at the station? Give the conductor this code:</div>
+            <div class="code">5UTY6T</div>
+            ${p.student ? `<div class="chip warn">Bring your student ID</div>` : ""}
+          </div>
+        </div>
+        <div class="sms fade-in"><small>Text message · CampusCoach</small>Booking K7Q2M9XF confirmed. Accra to Cape Coast, ${dep.time}. Seat ${esc(p.seats[0])}: campuscoach.gh/t/x8Kq… code 5UTY6T</div>
+        <button class="btn ghost" type="button" id="again">Book another trip</button>`;
+    }
+    $("#device").innerHTML = `<div class="device-wrap">${phone(html)}</div>`;
+    bindPassenger();
+  }
+
+  let holdTimer;
+  function startHoldClock() {
+    clearInterval(holdTimer);
+    const tick = () => {
+      const el = $("#timer");
+      if (!el || !state.p.holdEnds) return;
+      const s = Math.max(0, Math.round((state.p.holdEnds - Date.now()) / 1000));
+      el.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} held`;
+    };
+    tick();
+    holdTimer = setInterval(tick, 1000);
+  }
+
+  function bindPassenger() {
+    const p = state.p;
+    const go = (step) => { p.step = step; render(); $("#screen")?.scrollTo(0, 0); };
+    document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
+    document.querySelectorAll("[data-day]").forEach((b) => b.addEventListener("click", () => { p.day = Number(b.dataset.day); render(); }));
+    $("#student")?.addEventListener("click", () => { p.student = !p.student; render(); });
+    $("#swap")?.addEventListener("click", () => toast("Return trips work the same way: Cape Coast → Accra"));
+    $("#find")?.addEventListener("click", () => go("results"));
+    document.querySelectorAll("[data-dep]").forEach((b) => b.addEventListener("click", () => { p.dep = Number(b.dataset.dep); p.seats = []; go("seats"); }));
+    document.querySelectorAll("[data-seat]").forEach((b) => b.addEventListener("click", () => {
+      const n = b.dataset.seat;
+      if (taken.has(n)) return toast(`Seat ${n} is taken. Pick a light seat.`);
+      if (held.has(n)) return toast(`Seat ${n} is held by someone paying right now.`);
+      if (p.seats.includes(n)) p.seats = p.seats.filter((s) => s !== n);
+      else if (p.seats.length >= 6) return toast("Up to 6 seats per booking.");
+      else { p.seats.push(n); if (!p.holdEnds) p.holdEnds = Date.now() + 600000; }
+      if (!p.seats.length) p.holdEnds = 0;
+      const top = $("#screen").scrollTop;
+      render();
+      $("#screen").scrollTop = top;
+    }));
+    $("#toDetails")?.addEventListener("click", () => go("details"));
+    $("#toPay")?.addEventListener("click", () => {
+      p.name = $("#pname").value.trim() || p.name;
+      p.phone = $("#pphone").value.trim() || p.phone;
+      go("pay");
+    });
+    document.querySelectorAll("[data-net]").forEach((b) => b.addEventListener("click", () => { p.net = b.dataset.net; render(); }));
+    $("#paynow")?.addEventListener("click", () => {
+      go("paying");
+      setTimeout(() => { const s = $("#payStatus"); if (s) s.textContent = "Paystack confirmed the payment. Issuing your ticket…"; }, 2300);
+      setTimeout(() => { if (state.p.step === "paying") { state.p.token = "ccq_" + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2); go("ticket"); toast("Ticket sent to " + p.phone); } }, 3600);
+    });
+    $("#again")?.addEventListener("click", () => { p.seats = []; p.holdEnds = 0; go("search"); });
+    if (["seats", "details", "pay"].includes(p.step) && p.seats.length) startHoldClock();
+    if (p.step === "ticket") {
+      const el = $("#qr");
+      if (el && window.QRCode) new QRCode(el, { text: p.token || "ccq_demo", width: 168, height: 168, colorDark: "#0F2219", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.M });
+      else if (el) el.innerHTML = '<div style="width:168px;height:168px;display:grid;place-items:center;color:#0F2219;font:12px var(--mono)">QR code</div>';
+    }
+  }
+
+  // ---------------------------------------------------------------- conductor
+  const scans = [
+    { ok: true, name: "Ama Mensah", seat: "11B", from: "Circle Station", to: "Cape Coast UCC", fare: "Student", student: true },
+    { ok: true, name: "Kwame Asare", seat: "4A", from: "Circle Station", to: "Winneba", fare: "Standard" },
+    { ok: false, title: "Already boarded at 06:41 by Kofi", name: "Kwame Asare", seat: "4A", note: "The same ticket was scanned before. Check the passenger's face and student ID." },
+    { ok: false, title: "Different journey", name: "Efua Owusu", seat: "9C", note: "This ticket is for Accra to Kumasi, 10:30. Send the passenger to the station desk." },
+    { ok: true, name: "Yaw Boateng", seat: "2C", from: "Kasoa Junction", to: "Cape Coast UCC", fare: "Standard" },
+    { ok: false, title: "This ticket was cancelled", name: "Abena Ofori", seat: "6D", note: "Cancelled yesterday and refunded. The seat was resold." },
+  ];
+  const cSteps = ["Today's journey", "Start boarding", "Scan each ticket", "Confirm and board", "Record departure"];
+
+  function conductor() {
+    const c = state.c;
+    setBlind("Accra Circle → Cape Coast UCC · 07:00 · Boarding");
+    const current = c.step === "home" ? 0 : c.step === "scan" ? 2 : c.step === "result" ? 3 : 4;
+    const behind = {
+      home: "Conductors see only the journeys they are rostered on, and only the passenger details boarding needs.",
+      scan: "Each scan is checked by the server in a fixed order: real ticket, this journey, boarding open, not used, paid. Every refusal is logged with the device and the conductor.",
+      result: "Confirming is one step in the database: two conductors confirming the same ticket at the same instant gives exactly one boarding (tested with 20 at once).",
+      left: "No signal at the bus park? The conductor prints a numbered passenger sheet beforehand, ticks it, and enters the ticks when signal returns.",
+    }[c.step];
+    renderStory("Conductor app", "Board a full coach before 7:00", "Kofi, the conductor, at Circle Station with a phone and a queue of students.", cSteps, current, behind);
+
+    const pct = Math.round((c.boarded / 52) * 100);
+    let html = `
+      <div class="journey-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><div class="label" style="color:#9FB3A7">Today · Coach GR-2468-24</div><div class="t">07:00</div><div style="font-weight:600">Accra → Cape Coast</div></div><span class="status boarding">Boarding</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span><b class="num">${c.boarded}</b> of 52 boarded</span><span>${52 - c.boarded} to go</span></div>
+        <div class="progress"><i style="width:${pct}%"></i></div>
+      </div>`;
+    if (c.step === "home") {
+      html += `
+        <button class="btn momo" type="button" id="cScan">Scan tickets</button>
+        <div class="recent">
+          <div class="recent-item"><span>Find by code, phone or name</span><span class="chip">Manual</span></div>
+          <div class="recent-item"><span>Passenger list</span><span class="chip">52 seats</span></div>
+          <div class="recent-item"><span>Paper sheet for no signal</span><span class="chip">Sheet no. 14</span></div>
+        </div>`;
+    } else if (c.step === "scan") {
+      html += `
+        <div class="viewfinder" role="img" aria-label="Camera view, scanning"><div class="frame"><span></span><span></span><span></span><span></span></div><div class="scanline"></div><div class="hint">Point at the passenger's QR code</div></div>
+        <button class="btn" type="button" id="cRead">Read next ticket</button>
+        <button class="btn ghost" type="button" id="cDepart">Record departure</button>`;
+    } else if (c.step === "result") {
+      const r = scans[c.idx % scans.length];
+      html += r.ok ? `
+        <div class="result ok fade-in">
+          <div class="result-title">${icons.check} Valid ticket</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div class="big-seat">${r.seat}</div><div style="text-align:right;font-weight:700;font-size:18px">${r.name}</div></div>
+          <dl><dt>From</dt><dd>${r.from}</dd><dt>To</dt><dd>${r.to}</dd><dt>Fare</dt><dd>${r.fare}</dd></dl>
+          ${r.student ? `<div class="check-id">Check student ID</div>` : ""}
+        </div>
+        <button class="btn" type="button" id="cConfirm">Confirm boarding</button>` : `
+        <div class="result bad fade-in">
+          <div class="result-title">${icons.cross} ${r.title}</div>
+          <dl><dt>Name</dt><dd>${r.name}</dd><dt>Seat</dt><dd>${r.seat}</dd></dl>
+          <div style="font-size:14px">${r.note}</div>
+        </div>
+        <button class="btn ghost" type="button" id="cNext">Next passenger</button>`;
+    } else {
+      html += `<div class="result ok fade-in"><div class="result-title">${icons.check} Departed 07:02</div><div style="font-size:14px">${c.boarded} boarded. ${52 - c.boarded} seats marked as no-shows after arrival. The manager's dashboard updated.</div></div>
+        <button class="btn ghost" type="button" id="cReset">Start again</button>`;
+    }
+    $("#device").innerHTML = `<div class="device-wrap">${phone(html)}</div>`;
+    $("#cScan")?.addEventListener("click", () => { c.step = "scan"; render(); });
+    $("#cRead")?.addEventListener("click", () => { c.step = "result"; render(); });
+    $("#cConfirm")?.addEventListener("click", () => { c.boarded = Math.min(52, c.boarded + 1); c.idx++; c.step = "scan"; render(); toast("Boarded"); });
+    $("#cNext")?.addEventListener("click", () => { c.idx++; c.step = "scan"; render(); });
+    $("#cDepart")?.addEventListener("click", () => { c.step = "left"; render(); });
+    $("#cReset")?.addEventListener("click", () => { c.step = "home"; c.boarded = 31; c.idx = 0; render(); });
+  }
+
+  // ---------------------------------------------------------------- operations
+  const attention = [
+    { id: "bus", sev: "critical", text: "Bus missing: Accra → Kumasi, today 14:00", meta: "38 passengers booked · due in 2 hours · unassigned", action: "Assign GR-5521-25" },
+    { id: "refund", sev: "high", text: "A refund of GH₵ 72.00 could not be sent through Paystack", meta: "Booking ZS8FX4G2 · Finance · retry or pay by hand", action: "Retry" },
+    { id: "late", sev: "high", text: "Paid after the hold ended: passenger moved to seat 9C", meta: "Booking K3M8PQ2T · same class, same price", action: "Confirm re-seat" },
+    { id: "paper", sev: "normal", text: "Paper boardings not entered: Accra → Takoradi, yesterday 18:00", meta: "Conductor Esi · sheet no. 13", action: "Remind" },
+  ];
+  const board = [
+    ["05:30", "Cape Coast UCC", "GR-1173-22", 52, 52, "left", "Left 05:33"],
+    ["07:00", "Cape Coast UCC", "GR-2468-24", 46, 52, "boarding", "Boarding"],
+    ["08:15", "Kumasi Kejetia", "GR-3390-23", 61, 70, "sale", "On sale"],
+    ["10:30", "Cape Coast UCC", "GR-4402-25", 11, 52, "sale", "On sale"],
+    ["14:00", "Kumasi Kejetia", "No bus", 38, 70, "attn", "Needs a bus"],
+    ["17:30", "Takoradi", "GR-6018-24", 29, 52, "sale", "On sale"],
+  ];
+  const remap = [
+    ["Ama Mensah", "11B", "11B", "Same seat"],
+    ["Kwame Asare", "4A", "4A", "Same seat"],
+    ["Yaa Darko", "13D", "13C", "Nearest window"],
+    ["Kofi Annan", "12C", "12C", "Same seat"],
+    ["Akosua Badu", "1A", "1A", "Same seat"],
+    ["Esi Quaye", "2D", "2C", "Same row"],
+  ];
+
+  function ops() {
+    const o = state.o;
+    setBlind("Operations · Today · 6 departures · 237 passengers");
+    const behind = {
+      today: "Nothing here is typed by hand: the needs-attention list is raised by the system the moment something goes wrong, and clears itself when it is fixed.",
+      bus: "Swapping a bus after seats are sold moves every passenger by fixed rules (same seat, same row, next row, same side). Tickets and codes do not change, and passengers get a text with their new seat.",
+      money: "Every day is matched against Paystack's own records. Any difference is listed in plain words. Finance signs the day off, and the books are proven to match to the pesewa.",
+    }[o.tab];
+    renderStory("Manager console", "What needs my attention today?", "Efua runs operations from a laptop at head office, or her phone on the road.", ["Needs attention", "Departures", "Change a bus", "Money matches Paystack"], o.tab === "today" ? 1 : o.tab === "bus" ? 2 : 3, behind);
+
+    const tabs = [["today", "Today"], ["bus", "Change a bus"], ["money", "Money"]];
+    let body = "";
+    if (o.tab === "today") {
+      const open = attention.filter((a) => !o.resolved.has(a.id));
+      body = `
+        <section class="attention">
+          <div class="band-title"><h3>Needs attention</h3><span class="screen-sub">${open.length ? `${open.length} open` : "All clear"}</span></div>
+          ${open.length ? open.map((a) => `<div class="alert ${a.sev}" id="al-${a.id}"><span class="stripe"></span><div style="min-width:0"><p>${a.text}</p><small>${a.meta}</small></div><button class="btn small" type="button" data-fix="${a.id}">${a.action}</button></div>`).join("") : `<div class="ledger-ok">${icons.check} Nothing needs you right now.</div>`}
+        </section>
+        <section style="display:grid;gap:10px;min-width:0">
+          <div class="band-title"><h3>Departures today</h3><span class="screen-sub">Problems sort to the top</span></div>
+          <div class="board" role="table" aria-label="Departures today">
+            <div class="board-row head" role="row"><span>Time</span><span>To</span><span>Bus</span><span>Seats sold</span><span>Status</span></div>
+            ${[...board].sort((a, b) => (b[5] === "attn" && !o.resolved.has("bus")) - (a[5] === "attn" && !o.resolved.has("bus"))).map((r) => {
+              const fixed = r[5] === "attn" && o.resolved.has("bus");
+              const bus = fixed ? "GR-5521-25" : r[2];
+              const st = fixed ? ["sale", "On sale"] : [r[5], r[6]];
+              return `<div class="board-row" role="row"><span class="time">${r[0]}</span><span><span class="dest">${r[1]}</span><div class="sub">via ${r[1].startsWith("Cape") ? "Kasoa, Winneba" : r[1].startsWith("Kumasi") ? "Nkawkaw" : "Mankessim"}</div></span><span class="mono" style="font-size:12px">${bus}</span><span class="num">${r[3]} / ${r[4]}<div class="seatbar"><i style="width:${Math.round(r[3] / r[4] * 100)}%"></i></div></span><span class="status ${st[0]}">${st[1]}</span></div>`;
+            }).join("")}
+          </div>
+        </section>
+        <section class="figures" aria-label="Today in figures">
+          <div class="fig"><span>Seats sold</span><b>237</b><small>+18% on last Friday</small></div>
+          <div class="fig"><span>Occupancy</span><b>72%</b></div>
+          <div class="fig"><span>Booked revenue</span><b>GH₵ 19,284.50</b></div>
+          <div class="fig"><span>Boarded</span><b>98</b></div>
+          <div class="fig"><span>Refunds owed</span><b>GH₵ 72.00</b></div>
+        </section>`;
+    } else if (o.tab === "bus") {
+      body = `
+        <div class="two">
+          <div class="panel">
+            <h4>Coach GR-2468-24 has a cracked windscreen</h4>
+            <div class="screen-sub">07:00 Accra → Cape Coast · 46 passengers · replace with:</div>
+            <div class="recent">
+              <div class="recent-item" style="border-color:var(--forest)"><span><b>GR-5521-25</b> · Coach 2+2 · 52 seats</span><span class="chip ok">Free all day</span></div>
+              <div class="recent-item" style="opacity:.6"><span><b>GR-3390-23</b> · 70 seats</span><span class="chip bad">On the 08:15</span></div>
+              <div class="recent-item" style="opacity:.6"><span><b>GR-0907-21</b> · Minibus · 18 seats</span><span class="chip bad">Too small for 46</span></div>
+            </div>
+            <div class="behind"><strong>Safe by default</strong>A smaller bus is refused until every passenger has a seat or a refund. The change is only applied after the manager has seen this plan.</div>
+          </div>
+          <div class="panel">
+            <h4>Where everyone sits on GR-5521-25</h4>
+            <div class="screen-sub">46 passengers · 41 keep their seat number · nobody pays more</div>
+            <div class="table-scroll"><table class="remap"><thead><tr><th>Passenger</th><th>Seat</th><th></th><th>New</th><th>Rule</th></tr></thead>
+            <tbody>${remap.map((r, i) => `<tr id="rm-${i}"><td>${r[0]}</td><td class="mono">${r[1]}</td><td class="arrow">→</td><td class="mono"><b>${r[2]}</b></td><td><span class="chip ${r[3] === "Same seat" ? "ok" : "warn"}">${r[3]}</span></td></tr>`).join("")}
+            <tr><td colspan="5" class="screen-sub">and 40 more…</td></tr></tbody></table></div>
+            <button class="btn" type="button" id="doRemap" ${o.remapped ? "disabled" : ""}>${o.remapped ? "Bus changed · 46 texts sent" : "Change the bus and text passengers"}</button>
+          </div>
+        </div>`;
+    } else {
+      body = `
+        <div class="two">
+          <div class="panel">
+            <h4>Yesterday against Paystack</h4>
+            <div class="recon">
+              <div><span>Paystack payments</span><b>214</b></div>
+              <div><span>Our payments</span><b>214</b></div>
+              <div><span>Settled to bank</span><b>GH₵ 18,402.50</b></div>
+            </div>
+            <div class="ledger-ok">${icons.check} Every payment matches. No differences.</div>
+            <button class="btn" type="button" id="signoff" ${o.signed ? "disabled" : ""}>${o.signed ? "Signed off by Abena (Finance)" : "Sign off yesterday"}</button>
+          </div>
+          <div class="panel">
+            <h4>This week</h4>
+            <div class="recon">
+              <div><span>Booked revenue</span><b>GH₵ 96,210.00</b></div>
+              <div><span>Earned (completed trips)</span><b>GH₵ 81,445.50</b></div>
+              <div><span>Paystack fees</span><b>GH₵ 1,872.10</b></div>
+            </div>
+            <svg viewBox="0 0 320 110" width="100%" role="img" aria-label="Seats sold per day this week, rising to 237 today">
+              ${[118, 142, 131, 166, 189, 214, 237].map((v, i) => { const x = 18 + i * 44, h = Math.round(v / 250 * 80); return `<rect x="${x}" y="${92 - h}" width="26" height="${h}" rx="5" fill="${i === 6 ? "var(--momo)" : "var(--forest)"}" opacity="${i === 6 ? 1 : .8}"></rect><text x="${x + 13}" y="106" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="Schibsted Grotesk, sans-serif">${["Sat","Sun","Mon","Tue","Wed","Thu","Fri"][i]}</text>`; }).join("")}
+              <text x="${18 + 6 * 44 + 13}" y="${92 - Math.round(237 / 250 * 80) - 5}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink)" font-family="Schibsted Grotesk, sans-serif">237</text>
+            </svg>
+            <div class="ledger-ok">${icons.check} Report totals agree with the ledger to the pesewa.</div>
+          </div>
+        </div>`;
+    }
+    $("#device").innerHTML = `
+      <div class="console fade-in" style="width:100%">
+        <div class="console-bar"><nav class="console-nav" aria-label="Console">${tabs.map(([k, l]) => `<button type="button" data-tab="${k}" aria-pressed="${o.tab === k}">${l}</button>`).join("")}</nav><span class="screen-sub">Fri ${new Date().getDate()} · Efua Owusu · Operations</span></div>
+        <div class="console-body">${body}</div>
+      </div>`;
+    document.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => { o.tab = b.dataset.tab; render(); }));
+    document.querySelectorAll("[data-fix]").forEach((b) => b.addEventListener("click", () => {
+      const id = b.dataset.fix;
+      const el = $("#al-" + id);
+      el?.classList.add("gone");
+      setTimeout(() => { o.resolved.add(id); render(); }, 280);
+      toast({ bus: "GR-5521-25 assigned. The 14:00 is back on sale.", refund: "Refund sent to Paystack again.", late: "Re-seat confirmed. Passenger texted.", paper: "Reminder sent to Esi." }[id]);
+    }));
+    $("#doRemap")?.addEventListener("click", () => {
+      remap.forEach((_, i) => setTimeout(() => $("#rm-" + i)?.classList.add("flash"), i * 120));
+      setTimeout(() => { o.remapped = true; render(); toast("46 passengers moved and texted their seats."); }, remap.length * 120 + 400);
+    });
+    $("#signoff")?.addEventListener("click", () => { o.signed = true; render(); toast("Yesterday signed off. The day is now closed."); });
+  }
+
+  function render() {
+    if (state.mode === "passenger") passenger();
+    else if (state.mode === "conductor") conductor();
+    else ops();
+  }
+
+  const fromHash = (location.hash || "").replace("#", "");
+  if (["passenger", "conductor", "ops"].includes(fromHash)) state.mode = fromHash;
+  setMode(state.mode);
+})();
+</script>
