@@ -517,6 +517,7 @@ returns table (booking_id uuid, reference text, expires_at timestamptz)
 language plpgsql
 set search_path = ''
 as $$
+#variable_conflict use_column
 declare
   v_journey record;
   v_close_minutes int;
