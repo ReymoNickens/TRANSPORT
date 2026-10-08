@@ -67,6 +67,21 @@ The specification leaves the technology stack open (section 20).
 | T8 | Background jobs | Supabase `pg_cron` for database-only jobs (hold expiry); Vercel Cron for jobs that call providers | Correctness never depends on a job running on time (11.4) |
 | T9 | Tests | Vitest. Database tests run against a real Postgres with the migrations applied | The integrity tests (24.2) must exercise the real constraints |
 
+## Assumptions made during the build
+
+Choices the specification left open. Each is the safer reading; the owner
+can change any of them.
+
+| # | Phase | Assumption | Why |
+|---|---|---|---|
+| A1 | B | Route stops, seat layouts and fare tables are edited only while they are drafts. A live one is changed by copying it to a new draft and publishing that; the old version is retired or archived, never edited | Spec 27.3 and 27.4 forbid changing layouts or fares under existing journeys. Versioning is the simplest way to guarantee it and keeps every version on record |
+| A2 | B | A route's duration is not stored; it is the last stop's arrival offset | Spec 27.10: do not store a value in two places |
+| A3 | B | A fare table can go live only when every stop pair a passenger can travel has a standard fare | No journey is ever on sale without a price |
+| A4 | B | Concession discounts are rounded half up per seat; fees are summed exactly and the booking total is rounded once | Spec 13.4a rounds the total once; a per-seat concession must be a whole pesewa to be shown before payment |
+| A5 | B | Percentages (concessions, percent fees) are stored in basis points (1000 = 10%) | Integer arithmetic only; no floating point on money |
+| A6 | B | Vehicle capacity is the physical seat count; a published layout may not offer more bookable seats | Keeps the fleet record and the seat map consistent |
+| A7 | B | Business-rule refusals come from the database with SQLSTATE BR001 and a plain message, shown to managers as is | Spec 8.5: plain-English confirmation and recovery |
+
 ## Change history
 
 | Date | Decision | Change | By |

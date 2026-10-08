@@ -1,12 +1,18 @@
 import postgres from "postgres";
 import { randomUUID } from "node:crypto";
 import { inject } from "vitest";
+import { createSql } from "@/lib/db";
 
 export type Sql = postgres.Sql;
 
 /** Connects as the owner (superuser in tests), which bypasses row-level security. */
 export function connectAsOwner(): Sql {
   return postgres(inject("testDatabaseUrl"), { max: 4, onnotice: () => {} });
+}
+
+/** Connects the way the app does (camelCase rows, numeric pesewas), still as the owner. */
+export function connectAsApp(): Sql {
+  return createSql(inject("testDatabaseUrl"), { max: 4 });
 }
 
 export async function createOrganisation(sql: Sql, slug = `org-${randomUUID().slice(0, 8)}`) {

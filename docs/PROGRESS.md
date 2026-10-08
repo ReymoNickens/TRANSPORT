@@ -6,7 +6,7 @@ of every working session.
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · 🧑 needs you (an account, a key or a business decision)
 
-**Now working on:** Phase A done → next is **Phase B: network and fleet** (locations, routes, stops, vehicles, seat layouts, fares)
+**Now working on:** Phases A and B done → next is **Phase C: scheduling** (schedules, journey generation, seat and fare snapshots, vehicle assignment)
 
 ---
 
@@ -46,10 +46,17 @@ of every working session.
 - ✅ CI on GitHub: lint, typecheck, tests, build and dependency audit on every push
 - ⬜ 🧑 Try sign-in end to end on a real Supabase project, with a real Arkesel text (needs the accounts below)
 
-### Phase B: Network and fleet
-- ⬜ Locations, routes and stops
-- ⬜ Vehicles and versioned seat layouts
-- ⬜ Fare templates, concession (student) types, fee rules
+### Phase B: Network and fleet ✅ (built, tested, live on Supabase)
+- ✅ Locations: terminals, stations and stops (the controlled list used for search)
+- ✅ Routes with ordered stops; checked by the database before going live (origin first, destination last, times never go backwards)
+- ✅ Vehicles (registration, fleet number, capacity, status; retirement is final)
+- ✅ Versioned seat layouts, built from a pattern such as "2+2, 13 rows" or seat by seat; a published layout never changes
+- ✅ Fare tables by stop pair and seat type; can go live only when every trip has a price; prices change through a copied draft
+- ✅ Student concession types (percent or fixed) and fee rules (booking fee, levy; online or station)
+- ✅ Pricing in the fixed order of section 13.4a, with a price preview for managers
+- ✅ 24 operations endpoints, each checking a permission (route.manage, fleet.manage, fare.manage)
+- ✅ Tests: 86 passing (pricing, seat maps, permissions, and 20 database integrity tests for this phase)
+- ⬜ Manager screens for these (they come with Slice 3, the guided workflows)
 
 ### Phase C: Scheduling
 - ⬜ Schedules and exceptions
@@ -104,3 +111,4 @@ of every working session.
 | Date | What was done |
 |---|---|
 | 2026-10-08 | Stack chosen (Supabase, Vercel, Paystack, Arkesel). Phase A built: database foundations, sign-in, permissions, audit log, tests, CI. |
+| 2026-10-08 | Supabase and Vercel projects created; app live in London. Phase B built: locations, routes, vehicles, seat layouts, fares, concessions, fees, pricing. |

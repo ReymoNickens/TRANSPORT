@@ -53,7 +53,7 @@ export async function loadActor(tx: Tx, organisationId: string, identity: Identi
   if (!user || user.status !== "active") return null;
 
   const rows = await tx<
-    { permission_code: string; scope_type: Grant["scopeType"]; scope_id: string | null; high_risk: boolean; requires_second_factor: boolean }[]
+    { permissionCode: string; scopeType: Grant["scopeType"]; scopeId: string | null; highRisk: boolean; requiresSecondFactor: boolean }[]
   >`select * from app.user_permissions(${user.id})`;
 
   return {
@@ -61,12 +61,12 @@ export async function loadActor(tx: Tx, organisationId: string, identity: Identi
     organisationId,
     kind: user.kind,
     grants: rows.map((row) => ({
-      code: row.permission_code,
-      scopeType: row.scope_type,
-      scopeId: row.scope_id,
-      highRisk: row.high_risk,
+      code: row.permissionCode,
+      scopeType: row.scopeType,
+      scopeId: row.scopeId,
+      highRisk: row.highRisk,
     })),
-    secondFactorRequired: rows.some((row) => row.requires_second_factor),
+    secondFactorRequired: rows.some((row) => row.requiresSecondFactor),
     assuranceLevel: identity.assuranceLevel,
   };
 }

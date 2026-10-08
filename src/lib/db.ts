@@ -8,13 +8,43 @@ export type Tx = postgres.TransactionSql;
 let client: Sql | undefined;
 
 /**
+ * Creates a connection pool. Row fields are camelCase. bigint columns (money
+ * in pesewas) come back as JavaScript numbers, refusing any value too large
+ * to be exact.
+ */
+export function createSql(url: string, options: { max?: number } = {}): Sql {
+  return postgres(url, {
+    // prepare: false because the Supabase pooler runs in transaction mode.
+    prepare: false,
+    max: options.max ?? 5,
+    idle_timeout: 20,
+    connect_timeout: 10,
+    onnotice: () => {},
+    // Columns are snake_case in SQL and camelCase in TypeScript, both ways.
+    // JSON values are left exactly as stored.
+    transform: { column: { from: postgres.toCamel, to: postgres.fromCamel } },
+    types: {
+      bigint: {
+        to: 20,
+        from: [20],
+        serialize: (value: number) => String(value),
+        parse: (value: string) => {
+          const n = Number(value);
+          if (!Number.isSafeInteger(n)) throw new RangeError(`bigint ${value} is too large for a JavaScript number`);
+          return n;
+        },
+      },
+    },
+  }) as unknown as Sql;
+}
+
+/**
  * The shared connection pool. Use it directly only for the few platform
  * lookups that happen before an organisation is known. Business work goes
  * through withOrganisation.
  */
 export function db(): Sql {
-  // prepare: false because the Supabase pooler runs in transaction mode.
-  client ??= postgres(env().DATABASE_URL, { prepare: false, max: 5, idle_timeout: 20, connect_timeout: 10 });
+  client ??= createSql(env().DATABASE_URL);
   return client;
 }
 

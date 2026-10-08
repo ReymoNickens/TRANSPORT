@@ -1,20 +1,23 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { withOrganisation } from "@/lib/db";
 import { loadActor } from "@/lib/auth/actor";
-import { connectAsOwner, createAuthUser, createOrganisation, createStaff, randomGhanaPhone, type Sql } from "./helpers";
+import { connectAsApp, connectAsOwner, createAuthUser, createOrganisation, createStaff, randomGhanaPhone, type Sql } from "./helpers";
 
 let sql: Sql;
+let app: Sql;
 let orgA: string;
 let orgB: string;
 
 beforeAll(async () => {
   sql = connectAsOwner();
+  app = connectAsApp();
   orgA = await createOrganisation(sql);
   orgB = await createOrganisation(sql);
 });
 
 afterAll(async () => {
   await sql.end();
+  await app.end();
 });
 
 describe("creating an organisation", () => {
@@ -167,8 +170,8 @@ describe("passenger sign-in (loadActor)", () => {
     const authUserId = await createAuthUser(sql, phone);
     const identity = { authUserId, phone, assuranceLevel: "aal1" as const };
 
-    const first = await withOrganisation({ organisationId: orgA }, (tx) => loadActor(tx, orgA, identity), sql);
-    const second = await withOrganisation({ organisationId: orgA }, (tx) => loadActor(tx, orgA, identity), sql);
+    const first = await withOrganisation({ organisationId: orgA }, (tx) => loadActor(tx, orgA, identity), app);
+    const second = await withOrganisation({ organisationId: orgA }, (tx) => loadActor(tx, orgA, identity), app);
 
     expect(first?.userId).toBe(second?.userId);
     expect(first?.kind).toBe("passenger");
@@ -181,7 +184,7 @@ describe("passenger sign-in (loadActor)", () => {
     const actor = await withOrganisation(
       { organisationId: orgA },
       (tx) => loadActor(tx, orgA, { authUserId, phone: null, assuranceLevel: "aal1" }),
-      sql,
+      app,
     );
     expect(actor).toBeNull();
   });
@@ -191,7 +194,7 @@ describe("passenger sign-in (loadActor)", () => {
     const actor = await withOrganisation(
       { organisationId: orgA },
       (tx) => loadActor(tx, orgA, { authUserId: finance.authUserId, phone: null, assuranceLevel: "aal1" }),
-      sql,
+      app,
     );
     expect(actor?.secondFactorRequired).toBe(true);
     expect(actor?.grants.find((g) => g.code === "refund.approve")?.highRisk).toBe(true);

@@ -9,6 +9,8 @@ export const errorCatalogue = {
   forbidden: { status: 403, message: "You don't have permission to do this." },
   not_found: { status: 404, message: "We couldn't find what you were looking for." },
   conflict: { status: 409, message: "This was changed by someone else. Refresh and try again." },
+  already_exists: { status: 409, message: "Something with these details already exists." },
+  rule_violation: { status: 422, message: "This change breaks one of the business rules." },
   organisation_unavailable: { status: 503, message: "This service is not available right now." },
   provider_unavailable: { status: 502, message: "A service we depend on is not responding. Please try again shortly." },
   internal_error: { status: 500, message: "Something went wrong on our side. Please try again." },

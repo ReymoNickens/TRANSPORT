@@ -22,7 +22,8 @@ One app serves three areas: passenger (`/`), staff boarding (`/staff`), operatio
 ```
 src/app/            pages and API route handlers (src/app/api/**/route.ts)
 src/components/     UI components
-src/lib/            server library: db, env, api (errors, handler), auth (actor, permissions)
+src/lib/            server library: db, env, api (errors, handler, ops, pagination), auth (actor, permissions)
+src/server/         business operations (services) used by the API routes, one file per area, row types in types.ts
 src/domain/         pure business rules: state machines, pricing, refund policy (no I/O) [from phase B]
 src/providers/      provider adapters behind interfaces: sms/ (fake, arkesel), payments/ (fake, paystack) [phase D]
 supabase/migrations SQL migrations, applied in filename order
@@ -48,6 +49,12 @@ tests/db/           database integrity tests against a real Postgres
   `supabase/migrations/20261008065500_foundations.sql`: uuid v7 ids, bigint pesewas plus currency, timestamptz,
   `organisation_id` with composite foreign keys, the `org_boundary` policy, grants to `app_runtime`, audit triggers.
 - **New migrations**: a new file `supabase/migrations/<yyyymmddhhmmss>_<name>.sql`. Never edit a migration that has been pushed. Every function sets `search_path = ''` and schema-qualifies names (Supabase advisor 0011). Run the Supabase security advisor after each migration.
+- **Business rules in the database** raise `app.fail('plain message')` (SQLSTATE BR001). The API passes the
+  message through as `rule_violation`, so write it for a manager. Unique-index names get a plain message in
+  `uniqueMessages` in `src/lib/api/handler.ts`.
+- **Staff endpoints** use `opsRoute({ permission, params, query, body }, ({ tx, actor, ... }) => service(...))`
+  from `src/lib/api/ops.ts`. Lists take `pageQuery` and return `pageFrom(rows, query)` (select `count(*) over () as total_count`).
+- **Things sold against are versioned**: stops, seat layouts and fare tables change only as drafts (decision A1).
 - **State changes** use conditional updates (`where id = ? and state = <expected>`) and check the row count.
 - **Endpoints** use `apiRoute` from `src/lib/api/handler.ts`: `{ data }` or `{ error: { code, message, correlationId } }`.
   Error codes come from `src/lib/api/errors.ts`; add new ones there. Validate every body with zod via `readJson`.

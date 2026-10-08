@@ -71,7 +71,53 @@ export function toAppError(error: unknown): AppError {
       details: error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
     });
   }
+  const dbError = fromDatabaseError(error);
+  if (dbError) return dbError;
   return new AppError("internal_error", { cause: error });
+}
+
+/** Plain messages for unique rules a manager can run into. */
+const uniqueMessages: Record<string, string> = {
+  locations_name_per_organisation: "A location with this name already exists.",
+  routes_name_per_organisation: "A route with this name already exists.",
+  route_stops_route_id_location_id_key: "A location can appear only once on a route.",
+  route_stops_route_id_sequence_key: "Two stops have the same number.",
+  vehicles_organisation_id_registration_key: "A vehicle with this registration already exists.",
+  vehicles_fleet_number: "A vehicle with this fleet number already exists.",
+  seat_layouts_one_draft: "This vehicle already has a draft seat layout. Edit or publish that one.",
+  seats_layout_id_seat_number_key: "Two seats have the same number.",
+  seats_layout_id_row_number_column_number_key: "Two seats are in the same place.",
+  fare_rules_template_id_origin_stop_id_destination_stop_id_seat_type_key: "There are two prices for the same trip and seat type.",
+  concession_types_organisation_id_code_key: "A concession with this code already exists.",
+};
+
+/**
+ * Maps database errors to stable codes. Business-rule failures (SQLSTATE
+ * BR001) carry plain-English messages written for managers, so they pass
+ * through. Everything else gets a generic message (spec 19.5).
+ */
+function fromDatabaseError(error: unknown): AppError | null {
+  const e = error as { code?: string; message?: string; constraint_name?: string };
+  switch (e?.code) {
+    case "BR001":
+      return new AppError("rule_violation", { message: e.message, cause: error });
+    case "23505":
+      return new AppError("already_exists", {
+        message: (e.constraint_name && uniqueMessages[e.constraint_name]) || undefined,
+        cause: error,
+      });
+    case "23503":
+      return new AppError("validation_failed", { message: "Something this refers to does not exist.", cause: error });
+    case "23514":
+    case "22023":
+    case "22P02":
+      return new AppError("validation_failed", { cause: error });
+    case "40001":
+    case "40P01":
+      return new AppError("conflict", { cause: error });
+    default:
+      return null;
+  }
 }
 
 function describe(error: unknown) {

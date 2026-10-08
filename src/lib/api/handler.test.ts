@@ -38,6 +38,20 @@ describe("apiRoute", () => {
     expect(JSON.parse(text).error.code).toBe("internal_error");
   });
 
+  it("passes a business rule's plain message through, and hides other database detail", async () => {
+    const rule = await apiRoute(async () => {
+      throw Object.assign(new Error("Stops can only be changed while the route is a draft."), { code: "BR001" });
+    })(request());
+    expect(rule.status).toBe(422);
+    expect((await rule.json()).error).toMatchObject({ code: "rule_violation", message: "Stops can only be changed while the route is a draft." });
+
+    const duplicate = await apiRoute(async () => {
+      throw Object.assign(new Error("duplicate key value violates unique constraint"), { code: "23505", constraint_name: "vehicles_organisation_id_registration_key" });
+    })(request());
+    expect(duplicate.status).toBe(409);
+    expect((await duplicate.json()).error.message).toBe("A vehicle with this registration already exists.");
+  });
+
   it("reports validation failures with field paths", async () => {
     const schema = z.object({ seats: z.number().int().min(1) });
     const response = await apiRoute(async ({ request: r }) => ({ data: await readJson(r, schema) }))(
