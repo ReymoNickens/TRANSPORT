@@ -6,7 +6,7 @@ of every working session.
 
 **Legend:** ✅ done · 🔄 in progress · ⬜ not started · 🧑 needs you (an account, a key or a business decision)
 
-**Now working on:** Phase E Slice 2 (boarding) done → next is **Phase E, Slice 3: the manager's dashboard and guided journey creation**
+**Now working on:** Phase E Slice 3 part 1 (dashboard) done → next is **Slice 3 part 2: guided route, bus and fare set-up screens**
 
 ---
 
@@ -86,7 +86,7 @@ of every working session.
 - ✅ Text messages through the outbox (one per traveller, retried, never sent twice)
 - ✅ Ledger postings that must balance; refunds can never exceed the payment
 - ✅ 24 integrity tests from spec 24.2 pass (100 people grabbing one seat, a callback replayed 1,000 times, …)
-- ⬜ 🧑 Run `supabase/manual/2026-10-08_phase_c7_d_and_e2.sql` in the Supabase SQL editor
+- ⬜ 🧑 Run `supabase/manual/pending-supabase-changes.sql` in the Supabase SQL editor
 - ⬜ 🧑 Paystack test secret key, a ticket secret and a job secret in Vercel
 
 **Part 2, passenger screens ✅ (built and tested end to end in a browser)**
@@ -111,7 +111,19 @@ of every working session.
 - ✅ No signal: numbered printed passenger sheet with boarding codes; ticks entered later with the time from the sheet; a ticket cancelled after printing is flagged for review
 - ✅ Boarding records can never be changed or removed
 - ⬜ Not yet seen in a real browser: staff sign-in needs Supabase with an authenticator app, which this sandbox can't do. Please try it once the SQL file has run (see chat)
-- ⬜ Slice 3: manager dashboard, guided route, schedule and journey creation
+**Slice 3, part 1: the manager's dashboard ✅ (built and tested; in the SQL file waiting for you)**
+- ✅ Dashboard in three bands: needs attention, today's departures (problems first), today's figures
+- ✅ Needs-attention items with the next action beside them: "I'll handle it", "Mark as done" (with a note), "No action needed" (with a reason, managers only)
+- ✅ "Bus missing" raised automatically for a journey within 24 hours, and closed by itself once a bus is assigned
+- ✅ A manager's boarding override is put up for review; paper sheets not entered after arrival are flagged
+- ✅ After arrival, passengers who never boarded are marked as no-shows (once paper sheets are in)
+- ✅ Departure page: bus, crew (add and remove people), passengers, boarding progress, history, put on sale
+- ✅ Create a departure, step by step: route → date and time → bus → "what passengers will see" with stop times and fares; warns about a possible duplicate
+- ✅ Look up a booking by reference or phone number and see its seats, tickets and payment
+
+**Slice 3, part 2 ⬜ (next)**
+- ⬜ Create a route step by step (stops in order, times between stops, who can get on and off)
+- ⬜ Buses and seat layouts, fare tables, schedules screens
 - ⬜ Slice 4: cancellations, refund approval, refunds through Paystack, exception queue
 - ⬜ Slice 5: replacing a vehicle after seats are sold, with seat remapping
 
@@ -149,3 +161,4 @@ of every working session.
 | 2026-10-08 | Phase D part 1 built: holds, payments (Paystack and fake), late payments, tickets, text messages, ledger. 129 tests. |
 | 2026-10-08 | Phase D part 2 built: passenger screens. Full flow tested in a browser: search → seats → pay (fake) → tickets with QR. |
 | 2026-10-08 | Phase E slice 2 built: boarding (scan, find, override, paper sheet). 152 tests. |
+| 2026-10-08 | Phase E slice 3 part 1: manager dashboard, needs-attention queue, departure page, guided departure creation, booking lookup. 159 tests. |

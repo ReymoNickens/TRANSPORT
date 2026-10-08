@@ -9,7 +9,7 @@ export default function StaffPage() {
   return (
     <Page title="Staff boarding">
       <Suspense fallback={<Notice>Loading…</Notice>}>
-        <StaffHome area="staff" />
+        <StaffHome />
       </Suspense>
     </Page>
   );

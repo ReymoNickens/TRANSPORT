@@ -1,15 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { inject } from "vitest";
-import { createSql, withOrganisation, type Tx } from "@/lib/db";
+import { createSql, type Tx } from "@/lib/db";
 import { idempotent } from "@/lib/api/idempotency";
 import type { Actor } from "@/lib/auth/permissions";
-import { FakePaymentProvider } from "@/providers/payments/fake";
-import { createLayout, createVehicle, createVehicleInput, publishLayout } from "@/server/fleet";
 import { createConcession } from "@/server/fares";
-import { assignStaff, createOneOffJourney, publishJourney } from "@/server/journeys";
-import { holdInput, holdSeats } from "@/server/bookings";
-import { applyPaymentResult, startPayment } from "@/server/payments";
-import { credentialSecrets } from "@/server/credentials";
+import { assignStaff, createOneOffJourney } from "@/server/journeys";
 import {
   boardManually,
   boardWithOverride,
@@ -25,83 +20,23 @@ import {
   type BoardingResult,
 } from "@/server/boarding";
 import { as, daysFromToday, liveCorridor, type Operator } from "./fixtures";
+import { staff, trips, type Ticket, type Trip } from "./trips";
 import { connectAsApp, connectAsOwner, createOrganisation, createStaff, type Sql } from "./helpers";
 
 const TICKET_SECRET = process.env.TICKET_TOKEN_SECRET!;
-const provider = new FakePaymentProvider("https://transport.test");
-
 let owner: Sql;
 let wide: Sql;
 let op: Operator;
 let conductor: Operator;
 let outsider: Operator;
-let phoneCounter = 0;
-const nextPhone = () => `+23320${String(1_000_000 + ++phoneCounter).padStart(7, "0")}`;
 
-type Trip = { journeyId: string; stops: { id: string }[]; seatMap: Map<string, string> };
 let trip: Trip;
 let otherTrip: Trip;
 let studentId: string;
 /** Bookings are made while the journey is on sale, before boarding starts. */
 let booked: Record<string, Ticket[]>;
-
-async function newTrip(suffix: string, registration: string, time = "08:00"): Promise<Trip> {
-  const corridor = await liveCorridor(op, suffix);
-  const bus = await as(op, async (tx: Tx) => {
-    const vehicle = await createVehicle(tx, op.actorUserId, createVehicleInput.parse({ registration, vehicleType: "coach", capacity: 90 }));
-    const layout = await createLayout(tx, op.actorUserId, vehicle.id, { name: "2+1", pattern: { left: 2, right: 1, rows: 30, fullBackRow: false } });
-    await publishLayout(tx, layout.id);
-    return vehicle.id;
-  });
-  const journey = await as(op, (tx: Tx) =>
-    createOneOffJourney(tx, op.actorUserId, { routeId: corridor.routeId, departureAt: `${daysFromToday(1)}T${time}:00Z`, vehicleId: bus }),
-  );
-  await as(op, (tx: Tx) => publishJourney(tx, journey.id));
-  const seats = await owner`select id, seat_number from app.journey_seats where journey_id = ${journey.id}`;
-  return { journeyId: journey.id, stops: corridor.stops, seatMap: new Map(seats.map((s) => [s.seat_number as string, s.id as string])) };
-}
-
-type Ticket = { id: string; ticketNumber: string; qr: string; code: string; reference: string; bookingId: string; phone: string };
-
-/** A paid booking with tickets, through the same services the API uses. */
-async function bookAndPay(t: Trip, seatNumbers: string[], options: { name?: string; concession?: string } = {}): Promise<Ticket[]> {
-  const phone = nextPhone();
-  const input = holdInput.parse({
-    journeyId: t.journeyId,
-    originStopId: t.stops[0].id,
-    destinationStopId: t.stops[2].id,
-    purchaser: { name: "Ama Mensah", phone },
-    seats: seatNumbers.map((n) => ({
-      journeySeatId: t.seatMap.get(n),
-      passenger: { fullName: options.name ?? `Passenger ${n}`, phone, concession: options.concession ?? null, concessionReference: options.concession ? "UCC/2026/001" : null },
-    })),
-  });
-  const ctx = { organisationId: op.organisationId, correlationId: "test" };
-  const held = await withOrganisation(ctx, (tx) => holdSeats(tx, input, { userId: null, address: null, source: "passenger_app" }), op.app);
-  const [booking] = await owner`select id from app.bookings where reference = ${held.reference}`;
-  await startPayment(ctx, provider, booking.id, { method: "any" }, op.app);
-  const [attempt] = await owner`select id, amount_pesewas from app.payment_attempts where booking_id = ${booking.id} order by started_at desc limit 1`;
-  await applyPaymentResult(ctx, attempt.id, { status: "success", amountPesewas: Number(attempt.amount_pesewas), currency: "GHS", providerFeePesewas: 0, providerReference: null }, op.app);
-  const rows = await owner`
-    select t.id, t.ticket_number, c.id as credential_id
-    from app.tickets t join app.booked_seats s on s.id = t.booked_seat_id
-    join app.ticket_credentials c on c.ticket_id = t.id and c.revoked_at is null
-    join app.journey_seats js on js.id = s.journey_seat_id
-    where s.booking_id = ${booking.id} order by js.seat_number`;
-  return rows.map((r) => {
-    const secrets = credentialSecrets(TICKET_SECRET, r.credential_id);
-    return { id: r.id, ticketNumber: r.ticket_number, qr: secrets.qrToken, code: secrets.boardingCode, reference: held.reference, bookingId: booking.id, phone };
-  });
-}
-
-/** Runs as a staff member, optionally with a reason (as a high-risk route would). */
-function staff<T>(who: Operator, fn: (tx: Tx) => Promise<T>, options: { reason?: string; sql?: Sql } = {}) {
-  return withOrganisation(
-    { organisationId: who.organisationId, actorUserId: who.actorUserId, correlationId: "test", reason: options.reason, device: "test-device" },
-    fn,
-    options.sql ?? who.app,
-  );
-}
+let newTrip: ReturnType<typeof trips>["newTrip"];
+let bookAndPay: ReturnType<typeof trips>["bookAndPay"];
 
 const scan = (token: string, confirm: boolean, t = trip, sql?: Sql) => staff(conductor, (tx) => scanTicket(tx, t.journeyId, { token, confirm }), { sql });
 
@@ -135,6 +70,7 @@ beforeAll(async () => {
   op = { app, organisationId: org, actorUserId: (await createStaff(owner, org, "Operations Manager")).userId };
   conductor = { app, organisationId: org, actorUserId: (await createStaff(owner, org, "Conductor")).userId };
   outsider = { app, organisationId: org, actorUserId: (await createStaff(owner, org, "Conductor")).userId };
+  ({ newTrip, bookAndPay } = trips(op, owner, "20"));
   await owner`update app.users set full_name = 'Kofi Boateng' where id = ${conductor.actorUserId}`;
   // Tests run a day ahead of departure, so boarding opens early for this organisation.
   await owner`update app.settings set value = '3000' where organisation_id = ${org} and key = 'boarding.opens_minutes_before'`;

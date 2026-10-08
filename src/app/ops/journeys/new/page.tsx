@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Dashboard } from "@/components/ops/Dashboard";
+import { NewDeparture } from "@/components/ops/NewDeparture";
 import { OpsPage, OpsShell } from "@/components/ops/OpsShell";
 import { Notice } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Operations" };
+export const metadata: Metadata = { title: "Create a departure" };
 
-export default function OpsHome() {
+export default function Page() {
   return (
-    <OpsPage title="Today">
+    <OpsPage title="Create a departure">
       <Suspense fallback={<Notice>Loading…</Notice>}>
-        <OpsShell>{(can) => <Dashboard can={can} />}</OpsShell>
+        <OpsShell>{() => <NewDeparture />}</OpsShell>
       </Suspense>
     </OpsPage>
   );

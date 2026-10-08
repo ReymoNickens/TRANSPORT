@@ -94,7 +94,11 @@ can change any of them.
 | A19 | E | Scanning and manual boarding need the journey in BOARDING. A conductor starts boarding from the bus, at most `boarding.opens_minutes_before` (120) minutes before departure | Spec 14.3 "Boarding has not opened" |
 | A20 | E | A manager's override (ticket.override.board) can board against a payment problem, boarding not yet open, or a departed journey. It cannot board a cancelled, replaced or already boarded ticket, or a ticket for another journey | Spec 14.4; the ticket state machine and one-record-per-ticket rule still hold |
 | A21 | E | A paper manifest can be printed from `boarding.manifest_export_hours` (24) hours before departure; sheets are numbered per organisation; paper boardings are entered once boarding has started, including after departure and arrival | Spec 14.7 |
-| A22 | E | No-show marking and expiring unused tickets at arrival are left to slice 3, so late paper entries are never blocked | Spec 9.4 NO_SHOW, 14.7 step 3 |
+| A22 | E | After arrival, once every paper sheet is entered and `boarding.no_show_after_hours` (6) have passed, unboarded seats become NO_SHOW, unused tickets EXPIRED and paid bookings COMPLETED (the every-minute job) | Spec 9.4 NO_SHOW, 14.7 step 3: late paper entries are never blocked |
+| A23 | E | Two new permissions: exception.manage (take, work, resolve: Operations Manager, Finance, Support) and exception.dismiss (high risk: Operations Manager, Finance) | Spec 18.6 "dismissing needs a reason and a permission"; the spec's permission table has no code for it |
+| A24 | E | "Bus missing" opens for a journey with no bus within `journeys.bus_missing_alert_hours` (24) of departure, and "paper boardings not entered" for an arrived journey with an open sheet; both close themselves when fixed | Spec 18.6, 14.7 step 4, 9.11 |
+| A25 | E | Dashboard figures: seats sold and booked revenue count payments received today (Accra); refunds owed are refunds requested, approved, processing or failed | Spec 8.2a performance band |
+| A26 | E | A new departure is warned as a possible duplicate when the same route already leaves within an hour that day | Spec 8.4 "Create a duplicate departure" |
 | A7 | B | Business-rule refusals come from the database with SQLSTATE BR001 and a plain message, shown to managers as is | Spec 8.5: plain-English confirmation and recovery |
 
 ## Change history

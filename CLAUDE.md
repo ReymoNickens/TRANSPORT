@@ -52,6 +52,8 @@ tests/db/           database integrity tests against a real Postgres
   local file to that version afterwards. The connector asks for confirmation on SQL containing `delete from`
   (even inside a function body) and that prompt cannot be answered here, so it times out. Put such SQL in its own
   idempotent migration (`create or replace`) and ask the owner to run it in the Supabase SQL editor.
+  While migrations wait for the owner, `node scripts/pending-sql.mjs <last version on Supabase>` writes them all
+  into `supabase/manual/pending-supabase-changes.sql` (one transaction); check `list_migrations` first.
 - **New migrations**: a new file `supabase/migrations/<yyyymmddhhmmss>_<name>.sql`. Never edit a migration that has been pushed. Every function sets `search_path = ''` and schema-qualifies names (Supabase advisor 0011). Run the Supabase security advisor after each migration.
 - **Business rules in the database** raise `app.fail('plain message')` (SQLSTATE BR001). The API passes the
   message through as `rule_violation`, so write it for a manager. Unique-index names get a plain message in

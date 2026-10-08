@@ -11,7 +11,8 @@ import { checkPendingAttempts, retryStoredCallbacks } from "@/server/payments";
 /**
  * Background work, called every minute by a scheduler with the CRON_SECRET:
  * expire holds, ask the provider about late payments, retry stored callbacks,
- * and send queued text messages. Each step is safe to repeat.
+ * send queued text messages, raise and clear needs-attention items, and
+ * settle journeys after arrival (no-shows). Each step is safe to repeat.
  */
 async function tick(request: Request) {
   const correlationId = crypto.randomUUID();
@@ -27,8 +28,11 @@ async function tick(request: Request) {
   const callbacks = await retryStoredCallbacks(ctx, paymentProvider());
   const ticketSecret = env().TICKET_TOKEN_SECRET;
   const messages = ticketSecret ? await sendDueMessages(ctx, smsProvider(), { ticketSecret, baseUrl: env().APP_BASE_URL }) : { sent: 0 };
-  log("info", "jobs.tick", { correlationId, expired, ...payments, callbacks, ...messages });
-  return Response.json({ data: { expired, ...payments, callbacks, ...messages } });
+  const [{ raised, settled }] = await withOrganisation(ctx, (tx) =>
+    tx<{ raised: number; settled: number }[]>`select app.check_operations() as raised, app.settle_completed_journeys() as settled`,
+  );
+  log("info", "jobs.tick", { correlationId, expired, ...payments, callbacks, ...messages, raised, settled });
+  return Response.json({ data: { expired, ...payments, callbacks, ...messages, raised, settled } });
 }
 
 export const GET = tick;
